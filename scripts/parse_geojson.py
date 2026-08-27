@@ -13,7 +13,7 @@ def parse_all_files():
 
         adjust_properties(geojson, file["id_prefix"], file["existing_id_key"])
 
-        with open(f"./data/{file['name'].split('.')[0]}_adjusted.json", "w", encoding="utf-8") as f:
+        with open(f"./data/{file['name'].split('.')[0]}-adjusted.json", "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2)
 
 
@@ -21,7 +21,7 @@ def adjust_properties(geojson, id_prefix, existing_id_key):
     for feature in geojson["features"]:
         old_properties = feature["properties"]
         new_properties = {
-            "id": f"{id_prefix}-{old_properties[existing_id_key]}",
+            "area_id": f"{id_prefix}-{old_properties[existing_id_key]}",
             "name": old_properties[existing_id_key]
         }
         feature["properties"] = new_properties
