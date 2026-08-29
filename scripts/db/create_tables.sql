@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS AREAS(
 
 CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_VARIABLES(
     variable_name TEXT PRIMARY KEY,
-    variable_description TEXT,
     variable_unit TEXT
 );
 
