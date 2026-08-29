@@ -41,27 +41,29 @@ COLUMN_NAME_MAP = {
     # "Māori descent indicator - total census usually resident population count": "pop_count_by_maori_descent",
 }
 
+
 df = pd.read_csv("data/demographic_data.csv")
+print(df.columns.tolist())  # sanity check
 
-# sanity check — confirm the exact column names before pivoting
-print(df.columns.tolist())
+area_id_col = "CEN23_TBT_GEO_006"
+year_col    = "Census year"
+var_col     = "Variable codes"
+value_col   = "OBS_VALUE"
 
-area_col  = "Area" 
-area_id_col = "CEN23_TBT_GEO_006"    
-year_col  = "Census year" 
-var_col   = "Variable codes" 
-value_col = "OBS_VALUE"
+df_long = df[[area_id_col, year_col, var_col, value_col]].rename(
+    columns={
+        area_id_col: "area_code",
+        year_col: "census_year",
+        var_col: "variable_name",
+        value_col: "variable_value",
+    }
+)
 
-wide = df.pivot_table(
-    index=[area_col, area_id_col, year_col],
-    columns=var_col,
-    values=value_col,
-    aggfunc="first"   # see note below
-).reset_index()
+# keep only variables we've deliberately mapped, and translate their names to your snake_case aliases
+df_long = df_long[df_long["variable_name"].isin(COLUMN_NAME_MAP)].copy()
+df_long["variable_name"] = df_long["variable_name"].map(COLUMN_NAME_MAP)
 
-wide.columns.name = None   # tidy up the column index name pandas adds
+all_variable_names = pd.Series(df_long["variable_name"].unique())
+all_variable_names.to_csv("data/all_variable_names.csv", index=False, header=False)
 
-cols_to_keep = [c for c in wide.columns if c in COLUMN_NAME_MAP]  # only mapped originals
-wide = wide[cols_to_keep].rename(columns=COLUMN_NAME_MAP)
-
-wide.to_csv("data/demographic_data_formatted.csv", index=False)
+df_long.to_csv("data/demographic_data_long.csv", index=False)
