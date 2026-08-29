@@ -1,32 +1,41 @@
 import json
 
 files = [
-    {"name": "statistical-area-2-2023-clipped-generalised.json", "id_prefix": "2023-S2", "name_key": "SA22023__1", "id_key": "SA22023_V1"},
-    {"name": "statistical-area-3-2023-clipped-generalised.json", "id_prefix": "2023-S3", "name_key": "SA32023__1", "id_key": "SA32023_V1"},
-    {"name": "territorial-authority-2023-clipped-generalised.json", "id_prefix": "2023-TA", "name_key": "TA2023_V_1", "id_key": "TA2023_V_1"}
+    {"name": "statistical-area-2-2023-clipped-generalised.json", "name_key": "SA22023__1", "id_key": "SA22023_V1", "area_type": "SA2"},
+    {"name": "statistical-area-3-2023-clipped-generalised.json", "name_key": "SA32023__1", "id_key": "SA32023_V1", "area_type": "SA3"},
+    {"name": "territorial-authority-2023-clipped-generalised.json", "name_key": "TA2023_V_1", "id_key": "TA2023_V1_", "area_type": "TA"}
 ]
 
 def parse_all_files():
+    all_properties = []
     for file in files:
         with open(f"./data/{file['name']}", "r", encoding="utf-8") as f:
             geojson = json.load(f)
 
-        adjust_properties(geojson, file["id_prefix"], file["name_key"], file["id_key"])
+        adjust_properties(geojson, file["name_key"], file["id_key"], file["area_type"], all_properties)
 
         with open(f"./data/{file['name'].split('.')[0]}-adjusted.json", "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2, ensure_ascii=False)
 
+    return all_properties
 
-def adjust_properties(geojson, id_prefix, name_key, id_key):
+def adjust_properties(geojson, name_key, id_key, area_type, all_properties):
     for feature in geojson["features"]:
         old_properties = feature["properties"]
-        census_area_id = old_properties[id_key]
         new_properties = {
-            "area_id": f"{id_prefix}-{census_area_id}-{old_properties[name_key]}",
-            "name": old_properties[name_key],
-            "census_area_id": census_area_id
+            "area_name": old_properties[name_key],
+            "area_code": old_properties[id_key],
+            "census_year": 2023,
+            "area_type": area_type
         }
+        
+        all_properties.append(new_properties)
         feature["properties"] = new_properties
 
+def save_all_properties(all_properties):
+    with open("./data/all_area_properties.json", "w", encoding="utf-8") as f:
+        json.dump(all_properties, f, indent=2, ensure_ascii=False)
+
 if __name__ == "__main__":
-    parse_all_files()
+    all_properties = parse_all_files()
+    save_all_properties(all_properties)
