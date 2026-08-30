@@ -4,9 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "app",
             "type": "shell",
-            "command": "python src/app.py"
+            "label": "fill-db",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/db_setup.py",
+                "--fill"
+            ],
+            "problemMatcher": []
         }
     ]
 }
