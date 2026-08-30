@@ -149,14 +149,16 @@ VARIABLES = [
     ),
 ]
 
-df = pd.read_csv("data/demographic_data.csv")
+df = pd.read_csv("data/web-download/demographic_data_download.csv")
 
 area_id_col = "CEN23_TBT_GEO_006"
 year_col    = "Census year"
 var_col     = "Variable codes"
 value_col   = "OBS_VALUE"
 
-df_long = df[[area_id_col, year_col, var_col, value_col]].rename(
+df = df[df["Observation Status"] != "Confidential"]
+
+df = df[[area_id_col, year_col, var_col, value_col]].rename(
     columns={
         area_id_col: "area_code",
         year_col: "census_year",
@@ -165,13 +167,20 @@ df_long = df[[area_id_col, year_col, var_col, value_col]].rename(
     }
 )
 
+areas_table = pd.read_parquet("data/db-tables/areas_table.parquet")
+unique_area_codes = areas_table["area_code"].unique()
+
+df = df[df["area_code"].isin(unique_area_codes)]  # Remove non-area rows, somehow these slipped thru
+
 VARIABLE_NAME_MAP = {v.raw_name: v.variable_name for v in VARIABLES}
-df_long = df_long[df_long["variable_name"].isin(VARIABLE_NAME_MAP)].copy()
-df_long["variable_name"] = df_long["variable_name"].map(VARIABLE_NAME_MAP)
+df = df[df["variable_name"].isin(VARIABLE_NAME_MAP)]
+df["variable_name"] = df["variable_name"].map(VARIABLE_NAME_MAP)
 
 vars_rows = [asdict(v) for v in VARIABLES]
 vars_df = pd.DataFrame(vars_rows)
 vars_df = vars_df.drop(columns=["raw_name"])
-vars_df.to_csv("data/demographic_variables.csv", index=False)
+vars_df.to_csv("data/db-tables/csv-debug/demographic_variables_table.csv", index=False)
+vars_df.to_parquet("data/db-tables/demographic_variables_table.parquet", index=False)
 
-df_long.to_csv("data/demographic_data_long.csv", index=False)
+df.to_csv("data/db-tables/csv-debug/demographic_data_table.csv", index=False)
+df.to_parquet("data/db-tables/demographic_data_table.parquet", index=False)
