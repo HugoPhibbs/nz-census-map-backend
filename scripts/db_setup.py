@@ -26,8 +26,9 @@ def fill_variables_table():
             for variable_name in all_variable_names:
                 cur.execute(
                     """
-                    INSERT INTO variables (variable_name, variable_unit)
+                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_name, variable_unit)
                     VALUES (%s, NULL)
+                    ON CONFLICT DO NOTHING
                     """,
                     (variable_name,)
                 )
@@ -45,8 +46,9 @@ def fill_areas_table():
             for area in all_areas:
                 cur.execute(
                     """
-                    INSERT INTO areas (area_name, area_code, census_year, area_type)
+                    INSERT INTO AREAS (area_name, area_code, census_year, area_type)
                     VALUES (%s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING
                     """,
                     (area["area_name"], area["area_code"], area["census_year"], area["area_type"])
                 )
