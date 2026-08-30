@@ -32,6 +32,25 @@
                 "--start"
             ],
             "problemMatcher": []
-        }
+        },
+                {
+            "type": "shell",
+            "label": "reset-db",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/db_setup.py",
+                "--reset"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "start-api",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "src/app.py",
+            ],
+            "problemMatcher": []
+        },
     ]
 }
