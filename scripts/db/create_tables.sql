@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS AREAS(
 
 CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_VARIABLES(
     variable_name TEXT PRIMARY KEY,
-    variable_unit TEXT
+    variable_unit TEXT,
+    variable_description TEXT
 );
 
 /*
@@ -18,7 +19,6 @@ https://www.stats.govt.nz/assets/Methods/Statistical-standard-for-geographic-are
 
 CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_VARIABLES(
     variable_name TEXT PRIMARY KEY,
-    variable_description TEXT,
     variable_unit TEXT
 );
 
