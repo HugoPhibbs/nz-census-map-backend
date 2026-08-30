@@ -12,6 +12,26 @@
                 "--fill"
             ],
             "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "stop-db",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/db_setup.py",
+                "--stop"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "start-db",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/db_setup.py",
+                "--start"
+            ],
+            "problemMatcher": []
         }
     ]
 }

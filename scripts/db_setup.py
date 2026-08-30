@@ -6,11 +6,11 @@ import functools
 import pandas as pd
 
 def start_db():
-    subprocess.run("docker compose up -d", cwd="./scripts/db", shell=True, check=True)
+    subprocess.run(["docker", "compose", "up", "-d"], cwd="./scripts/db", check=True)
 
 def stop_db(reset_vols=False):
-    down_cmd = "docker compose down -v" if reset_vols else "docker compose down"
-    subprocess.run(down_cmd, cwd="./scripts/db", shell=True, check=True)
+    down_cmd = ["docker", "compose", "down", "-v"] if reset_vols else ["docker", "compose", "down"]
+    subprocess.run(down_cmd, cwd="./scripts/db", check=True)
     
 @functools.lru_cache(maxsize=1)
 def get_db_connection_pool():
