@@ -48,7 +48,8 @@
             "label": "start-api",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "src/app.py",
+                "-m",
+                "src.app"
             ],
             "problemMatcher": []
         },
