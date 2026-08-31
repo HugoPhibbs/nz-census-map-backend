@@ -31,8 +31,6 @@ def fill_variables_table():
                     """,
                     (row.variable_name, row.variable_unit, row.variable_description)
                 )
-    
-    pass
 
 def fill_areas_table():
     df = pd.read_parquet("./data/db-tables/areas_table.parquet")  # Ensure area_code is read as string to preserve leading zeros
@@ -92,3 +90,5 @@ if __name__ == "__main__":
         fill_tables()
     else:
         print("No action specified. Use --start, --stop, --fill, or --reset-vols.")
+        
+__all__ = ["get_db_connection_pool"]
