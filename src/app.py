@@ -9,10 +9,19 @@ from pypika import Query, Table
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
 
-
-@app.route("/stats/region/<region_id>")
-def get_region_stats(region_id):
-    pass
+@app.route("/stats/area")
+def get_region_stats():
+    census_year = request.args.get('census_year')
+    area_code = request.args.get('area_code')
+    
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                "SELECT * FROM demographic_data WHERE census_year = %s AND area_code = %s",
+                (census_year, area_code)
+            )
+            result = cur.fetchall()
+            return result, 200
 
 @app.route("/stats/variable/names")
 def get_all_variables():
@@ -23,12 +32,13 @@ def get_all_variables():
             names = [row[0] for row in result]
             return names, 200
 
-@app.route("/stats/variable/<variable>/<census_year>")
-def get_all_regions_stats(variable, census_year):
+@app.route("/stats/variable/<variable_name>/<census_year>")
+def get_all_regions_stats(variable_name, census_year):
     demographic_data = Table('demographic_data')
 
     q = Query.from_(demographic_data).select('*').where(
-        demographic_data.variable_name == variable and demographic_data.census_year == census_year)
+        (demographic_data.variable_name == variable_name)
+        & (demographic_data.census_year == census_year))
 
     if area_type := request.args.get('area_type'):
         areas = Table('areas')
