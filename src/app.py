@@ -14,19 +14,21 @@ CORS(app, origins=["http://localhost:3000"])
 def get_region_stats(region_id):
     pass
 
+@app.route("/stats/variable/names")
+def get_all_variables():
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT variable_name FROM demographic_variables")
+            result = cur.fetchall()
+            names = [row[0] for row in result]
+            return names, 200
 
-@app.route("/stats/region/all")
-def get_all_regions_stats():
-    variables_param = request.args.get('variables')
-
-    if not variables_param:
-        return {"error": "No variables specified, please use the query parameter 'variables' to specify the variables you want to retrieve."}, 400
-
-    variables = variables_param.split(',')
-
+@app.route("/stats/variable/<variable>/<census_year>")
+def get_all_regions_stats(variable, census_year):
     demographic_data = Table('demographic_data')
 
-    q = Query.from_(demographic_data).select('*').where(demographic_data.variable_name.isin(variables))
+    q = Query.from_(demographic_data).select('*').where(
+        demographic_data.variable_name == variable and demographic_data.census_year == census_year)
 
     if area_type := request.args.get('area_type'):
         areas = Table('areas')
