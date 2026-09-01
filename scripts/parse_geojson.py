@@ -23,15 +23,18 @@ def parse_all_files():
 def adjust_properties(geojson, name_key, id_key, area_type, all_properties):
     for feature in geojson["features"]:
         old_properties = feature["properties"]
+        area_code = old_properties[id_key]
+        census_year = 2023
+        
         new_properties = {
             "area_name": old_properties[name_key],
-            "area_code": old_properties[id_key],
-            "census_year": 2023,
+            "area_code": area_code,
+            "census_year": census_year,
             "area_type": area_type
         }
         
         all_properties.append(new_properties)
-        feature["properties"] = new_properties
+        feature["properties"] = {**new_properties, "area_id": f"{census_year}-{area_code}"}
 
 def save_all_properties(all_properties):
     df = pd.DataFrame(all_properties)
