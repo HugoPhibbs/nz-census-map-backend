@@ -3,6 +3,22 @@ import argparse
 import psycopg_pool
 import functools
 import pandas as pd
+import psycopg
+from psycopg.types.numeric import NumericLoader, NumericBinaryLoader
+
+# The below code handles converting NUMERIC to float or int.
+# See https://www.psycopg.org/docs/usage.html#numbers-adaptation
+
+def normalize_numeric(value):
+    return int(value) if value == value.to_integral_value() else float(value)
+
+class IntOrFloatNumericLoader(NumericLoader):
+    def load(self, data):
+        return normalize_numeric(super().load(data))
+
+class IntOrFloatNumericBinaryLoader(NumericBinaryLoader):
+    def load(self, data):
+        return normalize_numeric(super().load(data))
 
 def start_db():
     subprocess.run(["docker", "compose", "up", "-d"], cwd="./scripts/db", check=True)
@@ -13,6 +29,8 @@ def stop_db(reset=False):
     
 @functools.lru_cache(maxsize=1)
 def get_db_connection_pool():
+    psycopg.adapters.register_loader("numeric", IntOrFloatNumericLoader)
+    psycopg.adapters.register_loader("numeric", IntOrFloatNumericBinaryLoader)
     return psycopg_pool.ConnectionPool(conninfo="dbname=census-db user=admin password=devpassword host=localhost port=5432", min_size=1, max_size=10)
 
 def fill_variables_table():
