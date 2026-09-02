@@ -34,20 +34,20 @@ def get_db_connection_pool():
     return psycopg_pool.ConnectionPool(conninfo="dbname=census-db user=admin password=devpassword host=localhost port=5432", min_size=1, max_size=10)
 
 def fill_variables_table():
-    all_variable_names = pd.read_parquet("./data/db-tables/demographic_variables_table.parquet")
+    all_variable_ids = pd.read_parquet("./data/db-tables/demographic_variables_table.parquet")
     
     pool = get_db_connection_pool()
     
     with pool.connection() as conn:
         with conn.cursor() as cur:
-            for row in all_variable_names.itertuples(index=False):
+            for row in all_variable_ids.itertuples(index=False):
                 cur.execute(
                     """
-                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_name, variable_unit, variable_description)
+                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_id, variable_unit, plain_name)
                     VALUES (%s, %s, %s)
                     ON CONFLICT DO NOTHING
                     """,
-                    (row.variable_name, row.variable_unit, row.variable_description)
+                    (row.variable_id, row.variable_unit, row.plain_name)
                 )
 
 def fill_areas_table():
@@ -78,11 +78,11 @@ def fill_demographic_data_table():
             for row in df.itertuples(index=False):
                 cur.execute(
                     """
-                    INSERT INTO DEMOGRAPHIC_DATA (area_code, census_year, variable_name, variable_value)
+                    INSERT INTO DEMOGRAPHIC_DATA (area_code, census_year, variable_id, variable_value)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
                     """,
-                    (row.area_code, row.census_year, row.variable_name, row.variable_value)
+                    (row.area_code, row.census_year, row.variable_id, row.variable_value)
                 )
     
 def fill_tables():

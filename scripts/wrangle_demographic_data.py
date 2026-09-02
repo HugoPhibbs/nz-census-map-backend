@@ -16,14 +16,14 @@ class VariableUnit(str, Enum):
 @dataclass
 class VariableMeta:
     raw_name: str
-    variable_name: str
+    variable_id: str
     variable_unit: VariableUnit
     plain_name: str = None
     
 @dataclass
 class VariablePercentageMeta:
-    base_variable_name: str
-    variable_name: str
+    base_variable_id: str
+    variable_id: str
     variable_unit: VariableUnit
     plain_name: str = None
 
@@ -37,7 +37,7 @@ VARIABLES = [
     ),
     VariableMeta(
         "Asian",
-        "pop_ethinicity_asian",
+        "pop_ethnicity_asian",
         VariableUnit.COUNT,
         "Asian population",
     ),
@@ -162,96 +162,96 @@ VARIABLES_PERCENTAGE = [
         "pop_maori_descent",
         "perc_maori_descent",
         VariableUnit.PERCENTAGE,
-        "Maori descent percentage",
+        "Maori descent (%)",
     ),
     VariablePercentageMeta(
         "pop_ethnicity_maori",
         "perc_ethnicity_maori",
         VariableUnit.PERCENTAGE,
-        "Māori ethnicity percentage",
+        "Māori ethnicity (%)",
     ),
     VariablePercentageMeta(
         "pop_ethnicity_pacific",
         "perc_ethnicity_pacific",
         VariableUnit.PERCENTAGE,
-        "Pacific Peoples ethnicity percentage",
+        "Pacific Peoples ethnicity (%)",
     ),
     VariablePercentageMeta(
         "pop_ethnicity_other",
         "perc_ethnicity_other",
         VariableUnit.PERCENTAGE,
-        "Other ethnicity percentage",
+        "Other ethnicity (%)",
     ),
     VariablePercentageMeta(
         "pop_another_gender",
         "perc_another_gender",
         VariableUnit.PERCENTAGE,
-        "Another gender percentage",
+        "Another gender (%)",
     ),
     VariablePercentageMeta(
         "pop_ethnicity_asian",
         "perc_ethnicity_asian",
         VariableUnit.PERCENTAGE,
-        "Asian ethnicity percentage",
+        "Asian ethnicity (%)",
     ),
     VariablePercentageMeta(
         "pop_ethnicity_european",
         "perc_ethnicity_european",
         VariableUnit.PERCENTAGE,
-        "European ethnicity percentage",
+        "European ethnicity (%)",
     ),
     VariablePercentageMeta(
         "pop_gender_female",
         "perc_gender_female",
         VariableUnit.PERCENTAGE,
-        "Female gender percentage",
+        "Female gender (%)",
     ),
     VariablePercentageMeta(
         "pop_sex_female",
         "perc_sex_female",
         VariableUnit.PERCENTAGE,
-        "Female sex percentage",
+        "Female sex (%)",
     ),
     VariablePercentageMeta(
         "pop_gender_male",
         "perc_gender_male",
         VariableUnit.PERCENTAGE,
-        "Male gender percentage",
+        "Male gender (%)",
     ),
     VariablePercentageMeta(
         "pop_sex_male",
         "perc_sex_male",
         VariableUnit.PERCENTAGE,
-        "Male sex percentage",
+        "Male sex (%)",
     ),
     VariablePercentageMeta(
         "pop_ethnicity_mela",
         "perc_ethnicity_mela",
         VariableUnit.PERCENTAGE,
-        "Middle Eastern/Latin American/African ethnicity percentage",
+        "Middle Eastern/Latin American/African ethnicity (%)",
     ),
     VariablePercentageMeta(
         "pop_birthplace_nz",
         "perc_birthplace_nz",
         VariableUnit.PERCENTAGE,
-        "NZ born percentage",
+        "NZ born (%)",
     ),
     VariablePercentageMeta(
         "pop_birthplace_overseas",
         "perc_birthplace_overseas",
         VariableUnit.PERCENTAGE,
-        "Overseas born percentage",
+        "Overseas born (%)",
     ),
 ]
 
 def add_perc_data(demo_df):
-    name_map = {pm.base_variable_name: pm.variable_name for pm in VARIABLES_PERCENTAGE}
+    name_map = {pm.base_variable_id: pm.variable_id for pm in VARIABLES_PERCENTAGE}
 
-    pop_resident_df = demo_df[demo_df["variable_name"] == "pop_resident_usual"][
+    pop_resident_df = demo_df[demo_df["variable_id"] == "pop_resident_usual"][
         ["area_code", "census_year", "variable_value"]
     ].rename(columns={"variable_value": "resident_value"})
 
-    base_df = demo_df[demo_df["variable_name"].isin(name_map)].copy()
+    base_df = demo_df[demo_df["variable_id"].isin(name_map)].copy()
 
     merged = base_df.merge(
         pop_resident_df, on=["area_code", "census_year"], how="inner"
@@ -259,7 +259,7 @@ def add_perc_data(demo_df):
     merged = merged[merged["resident_value"].notna() & (merged["resident_value"] != 0)]
 
     merged["variable_value"] = merged["variable_value"] / merged["resident_value"] * 100
-    merged["variable_name"] = merged["variable_name"].map(name_map)
+    merged["variable_id"] = merged["variable_id"].map(name_map)
     merged = merged.drop(columns=["resident_value"])
 
     demo_df = pd.concat([demo_df, merged], ignore_index=True)
@@ -280,7 +280,7 @@ def load_and_clean_df():
         columns={
             area_id_col: "area_code",
             year_col: "census_year",
-            var_col: "variable_name",
+            var_col: "variable_id",
             value_col: "variable_value",
         }
     )
@@ -296,9 +296,9 @@ def remove_non_area_rows(demo_df):
     return demo_df
 
 def rename_variables(demo_df):
-    VARIABLE_NAME_MAP = {v.raw_name: v.variable_name for v in VARIABLES}
-    demo_df = demo_df[demo_df["variable_name"].isin(VARIABLE_NAME_MAP)]
-    demo_df["variable_name"] = demo_df["variable_name"].map(VARIABLE_NAME_MAP)
+    VARIABLE_ID_MAP = {v.raw_name: v.variable_id for v in VARIABLES}
+    demo_df = demo_df[demo_df["variable_id"].isin(VARIABLE_ID_MAP)]
+    demo_df["variable_id"] = demo_df["variable_id"].map(VARIABLE_ID_MAP)
     
     return demo_df
 
@@ -309,7 +309,7 @@ def create_and_save_variables_table():
         
     perc_rows = [asdict(pct) for pct in VARIABLES_PERCENTAGE]
     for row in perc_rows:
-        del row["base_variable_name"]
+        del row["base_variable_id"]
     
     vars_df = pd.DataFrame(base_vars_rows + perc_rows)
     vars_df.to_csv("data/db-tables/csv-debug/demographic_variables_table.csv", index=False)
