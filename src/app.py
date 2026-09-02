@@ -9,6 +9,22 @@ from pypika import Query, Table
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
 
+@app.route("/area")
+def get_area_info():
+    census_year = request.args.get('census_year')
+    area_code = request.args.get('area_code')
+    
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                "SELECT * FROM areas WHERE census_year = %s AND area_code = %s",
+                (census_year, area_code)
+            )
+            result = cur.fetchone()
+            if result is None:
+                return {"error": "Area not found"}, 404
+            return result, 200
+
 @app.route("/stats/area")
 def get_region_stats():
     census_year = request.args.get('census_year')
@@ -89,4 +105,3 @@ if __name__ == '__main__':
 
     print("Running a production server at http://localhost:5000")
     serve(app, host='0.0.0.0', port=5000, threads=4)
-    
