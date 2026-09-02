@@ -22,22 +22,40 @@ def get_region_stats():
             )
             result = cur.fetchall()
             return result, 200
+        
+@app.route("/stats/variable/ids/to-unit")
+def get_variable_ids_to_unit():
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT variable_id, variable_unit FROM demographic_variables")
+            result = cur.fetchall()
+            return {row[0]: row[1] for row in result}, 200
+        
+@app.route("/stats/variable/ids/to-name")
+def get_variable_ids_to_name():
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT variable_id, plain_name FROM demographic_variables")
+            result = cur.fetchall()
+            return {row[0]: row[1] for row in result}, 200
 
-@app.route("/stats/variable/names")
+@app.route("/stats/variable/ids")
 def get_all_variables():
     with get_db_connection_pool().connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT variable_name FROM demographic_variables")
+            cur.execute("SELECT variable_id FROM demographic_variables")
             result = cur.fetchall()
             names = [row[0] for row in result]
             return names, 200
 
-@app.route("/stats/variable/<variable_name>/<census_year>")
-def get_all_regions_stats(variable_name, census_year):
+@app.route("/stats/variable/<variable_id>/<census_year>")
+def get_all_regions_stats(variable_id, census_year):
+    drop_pop_data = request.args.get('drop_pop_data', 'false').lower() == 'true'
+    
     demographic_data = Table('demographic_data')
 
     q = Query.from_(demographic_data).select('*').where(
-        (demographic_data.variable_name == variable_name)
+        (demographic_data.variable_id == variable_id)
         & (demographic_data.census_year == census_year))
 
     if area_type := request.args.get('area_type'):
@@ -46,6 +64,9 @@ def get_all_regions_stats(variable_name, census_year):
             (demographic_data.area_code == areas.area_code) &
             (demographic_data.census_year == areas.census_year)
         ).where(areas.area_type == area_type)
+        
+    if drop_pop_data:
+        q = q.where(~demographic_data.variable_id.like("pop_%"))
 
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
@@ -68,3 +89,4 @@ if __name__ == '__main__':
 
     print("Running a production server at http://localhost:5000")
     serve(app, host='0.0.0.0', port=5000, threads=4)
+    
