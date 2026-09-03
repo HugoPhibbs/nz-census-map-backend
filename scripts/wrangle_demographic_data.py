@@ -326,5 +326,7 @@ if __name__ == "__main__":
     demo_df = rename_variables(demo_df)
     demo_df = add_perc_data(demo_df)
     
+    demo_df["variable_value"] = demo_df["variable_value"].round(2)
+    
     create_and_save_variables_table()
     save_demo_df(demo_df)
