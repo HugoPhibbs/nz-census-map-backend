@@ -5,6 +5,16 @@
     "tasks": [
         {
             "type": "shell",
+            "label": "start-backend",
+            "problemMatcher": [],
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "start-db",
+                "start-api"
+            ]
+        },
+        {
+            "type": "shell",
             "label": "fill-db",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
