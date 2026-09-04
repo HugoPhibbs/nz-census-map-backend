@@ -91,10 +91,10 @@ def get_all_regions_stats(variable_id, census_year):
             return result, 200
 
 
-@app.route('/area-boundaries.pmtiles')
+@app.route('/combined.pmtiles')
 def map():
     return send_file(
-        "../data/area-boundaries.pmtiles",
+        "../data/combined.pmtiles",
         mimetype='application/octet-stream',
         conditional=True
     )
