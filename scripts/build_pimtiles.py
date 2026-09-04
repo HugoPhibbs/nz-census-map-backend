@@ -18,11 +18,12 @@ def merge_geojson_to_pmtiles():
         '-L ta:./geojson/territorial-authority-2023-clipped-generalised-adjusted.json '
         '-L sa3:./geojson/statistical-area-3-2023-clipped-generalised-adjusted.json '
         '-L sa2:./geojson/statistical-area-2-2023-clipped-generalised-adjusted.json '
+        '-L sa1:./geojson/statistical-area-1-2023-clipped-generalised-adjusted.json '
         '-L coastline:./geojson/nz-coastlines-and-islands-polygons-topo-1250k.json"',
         shell=True,
     )
     
-def merge_boundary_with_base_pmtiles():
+def merge_area_boundaries_with_basemap():
     data_dir = os.path.join(os.getcwd(), "data")
     subprocess.run(
         f'docker run --rm -v "{data_dir}:/data" -w /data ubuntu:24.04 bash -c '
@@ -37,8 +38,8 @@ def merge_boundary_with_base_pmtiles():
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build PMTiles for NZ Census Map")
-    parser.add_argument("--fetch-basemap", "-fb", action="store_true", help="Fetch the basemap PMTiles")
     parser.add_argument("--merge-geojson", "-mg", action="store_true", help="Build the boundary PMTiles")
+    parser.add_argument("--fetch-basemap", "-fb", action="store_true", help="Fetch the basemap PMTiles")
     parser.add_argument("--merge-pmtiles", "-mp", action="store_true", help="Merge boundary and basemap PMTiles")
     parser.add_argument("--all", "-a", action="store_true", help="Run all steps")
     
@@ -57,5 +58,5 @@ if __name__ == "__main__":
         print("fetching basemap done")
     
     if args.merge_pmtiles or args.all:
-        merge_boundary_with_base_pmtiles()
+        merge_area_boundaries_with_basemap()
         print("merging pmtiles done")

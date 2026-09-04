@@ -266,10 +266,10 @@ def add_perc_data(demo_df):
     
     return demo_df
 
-def load_and_clean_df():
-    demo_df = pd.read_csv("data/web-download/demographic_data_download.csv")
 
-    area_id_col = "CEN23_TBT_GEO_006"
+def load_and_clean_df(path, area_id_col="CEN23_TBT_GEO_006"):
+    demo_df = pd.read_csv(path, low_memory=False)
+
     year_col    = "Census year"
     var_col     = "Variable codes"
     value_col   = "OBS_VALUE"
@@ -319,9 +319,26 @@ def save_demo_df(demo_df):
     demo_df.to_csv("data/db-tables/csv-debug/demographic_data_table.csv", index=False)
     demo_df.to_parquet("data/db-tables/demographic_data_table.parquet", index=False)
     
+def remove_inland_water_areas_from_demo_df(demo_df):
+    inland_water_areas_df = pd.read_csv("./data/db-tables/inland_water_areas.csv")
     
-if __name__ == "__main__":
-    demo_df = load_and_clean_df()
+    demo_df = demo_df.merge(
+        inland_water_areas_df,
+        on=["area_code", "census_year"],
+        how="left",
+        indicator=True,
+    )
+    demo_df = demo_df[demo_df["_merge"] == "left_only"].drop(columns="_merge")
+    
+    return demo_df
+    
+    
+if __name__ == "__main__":    
+    demo_df = load_and_clean_df("data/web-download/demographic_data_download.csv")
+    demo_s1_df = load_and_clean_df("data/web-download/demographic_data_download_sa1.csv", area_id_col="CEN23_TBT_GEO_002")
+    
+    demo_df = pd.concat([demo_df, demo_s1_df], ignore_index=True)
+    
     demo_df = remove_non_area_rows(demo_df)
     demo_df = rename_variables(demo_df)
     demo_df = add_perc_data(demo_df)

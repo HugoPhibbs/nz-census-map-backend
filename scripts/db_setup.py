@@ -1,3 +1,4 @@
+import io
 import subprocess
 import argparse
 import psycopg_pool
@@ -72,18 +73,35 @@ def fill_demographic_data_table():
     df = pd.read_parquet("./data/db-tables/demographic_data_table.parquet")
 
     pool = get_db_connection_pool()
-    
+
     with pool.connection() as conn:
         with conn.cursor() as cur:
-            for row in df.itertuples(index=False):
-                cur.execute(
-                    """
-                    INSERT INTO DEMOGRAPHIC_DATA (area_code, census_year, variable_id, variable_value)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT DO NOTHING
-                    """,
-                    (row.area_code, row.census_year, row.variable_id, row.variable_value)
-                )
+            cur.execute("""
+                CREATE TEMP TABLE demographic_data_staging (
+                    area_code TEXT,
+                    census_year INT,
+                    variable_id TEXT,
+                    variable_value DOUBLE PRECISION
+                ) ON COMMIT DROP
+            """)
+
+            buf = io.StringIO()
+            df.to_csv(buf, index=False, header=False)
+            buf.seek(0)
+
+            with cur.copy(
+                "COPY demographic_data_staging (area_code, census_year, variable_id, variable_value) FROM STDIN WITH (FORMAT csv)"
+            ) as copy:
+                copy.write(buf.read())
+
+            cur.execute("""
+                INSERT INTO DEMOGRAPHIC_DATA (area_code, census_year, variable_id, variable_value)
+                SELECT area_code, census_year, variable_id, variable_value
+                FROM demographic_data_staging
+                ON CONFLICT DO NOTHING
+            """)
+
+        conn.commit()
     
 def fill_tables():
     fill_variables_table()
