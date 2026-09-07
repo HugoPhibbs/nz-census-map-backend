@@ -92,9 +92,16 @@ def get_all_regions_stats(variable_id, census_year):
 
 
 @app.route('/combined.pmtiles')
-def map():
+def get_map():
     return send_file(
         "../data/combined.pmtiles",
+        mimetype='application/octet-stream',
+        conditional=True
+    )
+@app.route('/sa1.pmtiles')
+def get_sa1_map():
+    return send_file(
+        "../data/sa1.pmtiles",
         mimetype='application/octet-stream',
         conditional=True
     )

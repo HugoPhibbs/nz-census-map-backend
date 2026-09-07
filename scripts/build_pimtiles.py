@@ -7,19 +7,17 @@ def fetch_basemap():
     subprocess.run(f'docker run --rm -v "{data_dir}:/data" protomaps/go-pmtiles extract https://build.protomaps.com/20260901.pmtiles /data/nz_basemap.pmtiles --bbox=165.673828,-47.338823,178.857422,-34.016242 --maxzoom=12', shell=True)
     subprocess.run(f'docker run --rm -v "{data_dir}:/data" protomaps/go-pmtiles extract https://build.protomaps.com/20260901.pmtiles /data/chatham_basemap.pmtiles --bbox=182.458497,-44.489317,184.315186,-43.501412 --maxzoom=12', shell=True)
     
-    
 def merge_geojson_to_pmtiles():
     data_dir = os.path.join(os.getcwd(), "data")
     subprocess.run(
         f'docker run --rm -v "{data_dir}:/data" -w /data ubuntu:24.04 bash -c '
         '"apt update && apt install -y tippecanoe && '
-        'tippecanoe -f -o ./area_boundaries.pmtiles -z12 --drop-densest-as-needed '
-        '--extend-zooms-if-still-dropping --coalesce-densest-as-needed '
+        'tippecanoe -f -o ./area_boundaries.pmtiles -z12 --no-tile-size-limit --no-feature-limit '
         '-L ta:./geojson/territorial-authority-2023-clipped-generalised-adjusted.json '
         '-L sa3:./geojson/statistical-area-3-2023-clipped-generalised-adjusted.json '
-        '-L sa2:./geojson/statistical-area-2-2023-clipped-generalised-adjusted.json '
-        '-L sa1:./geojson/statistical-area-1-2023-clipped-generalised-adjusted.json '
-        '-L coastline:./geojson/nz-coastlines-and-islands-polygons-topo-1250k.json"',
+        '-L sa2:./geojson/statistical-area-2-2023-clipped-generalised-adjusted.json ',
+        # '-L sa1:./geojson/statistical-area-1-2023-clipped-generalised-adjusted.json ',
+        # '-L coastline:./geojson/nz-coastlines-and-islands-polygons-topo-1250k.json"',
         shell=True,
     )
     
@@ -31,7 +29,7 @@ def merge_area_boundaries_with_basemap():
         'mkdir -p /tmp/work && '
         'cp ./area_boundaries.pmtiles ./nz_basemap.pmtiles ./chatham_basemap.pmtiles /tmp/work/ && '
         'cd /tmp/work && '
-        'tile-join -o combined.pmtiles area_boundaries.pmtiles nz_basemap.pmtiles chatham_basemap.pmtiles && '
+        'tile-join --no-tile-size-limit -f -o combined.pmtiles area_boundaries.pmtiles nz_basemap.pmtiles chatham_basemap.pmtiles && '
         'cp combined.pmtiles /data/combined.pmtiles"',
         shell=True,
     )
