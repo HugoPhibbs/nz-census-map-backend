@@ -12,7 +12,7 @@ def merge_geojson_to_pmtiles():
     subprocess.run(
         f'docker run --rm -v "{data_dir}:/data" -w /data ubuntu:24.04 bash -c '
         '"apt update && apt install -y tippecanoe && '
-        'tippecanoe -f -o ./area_boundaries.pmtiles -z12 --no-tile-size-limit --no-feature-limit '
+        'tippecanoe -f -o ./pmtiles/area_boundaries.pmtiles -z12 --no-tile-size-limit --no-feature-limit '
         '-L ta:./geojson/territorial-authority-2023-clipped-generalised-adjusted.json '
         '-L sa3:./geojson/statistical-area-3-2023-clipped-generalised-adjusted.json '
         '-L sa2:./geojson/statistical-area-2-2023-clipped-generalised-adjusted.json ',
@@ -27,10 +27,10 @@ def merge_area_boundaries_with_basemap():
         f'docker run --rm -v "{data_dir}:/data" -w /data ubuntu:24.04 bash -c '
         '"apt update && apt install -y tippecanoe && '
         'mkdir -p /tmp/work && '
-        'cp ./area_boundaries.pmtiles ./nz_basemap.pmtiles ./chatham_basemap.pmtiles /tmp/work/ && '
+        'cp ./pmtiles/area_boundaries.pmtiles ./pmtiles/nz_basemap.pmtiles ./pmtiles/chatham_basemap.pmtiles /tmp/work/ && '
         'cd /tmp/work && '
         'tile-join --no-tile-size-limit -f -o combined.pmtiles area_boundaries.pmtiles nz_basemap.pmtiles chatham_basemap.pmtiles && '
-        'cp combined.pmtiles /data/combined.pmtiles"',
+        'cp combined.pmtiles /data/pmtiles/combined.pmtiles"',
         shell=True,
     )
     
