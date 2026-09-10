@@ -5,6 +5,18 @@
     "tasks": [
         {
             "type": "shell",
+            "label": "deploy-api",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "deploy.deploy",
+                "-df",
+                "--deploy-func"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
             "label": "start-backend",
             "problemMatcher": [],
             "dependsOrder": "sequence",
@@ -18,8 +30,31 @@
             "label": "fill-db",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "scripts/db_setup.py",
+                "-m",
+                "scripts.db_setup",
                 "--fill"
+            ],
+            "problemMatcher": []
+        },
+                {
+            "type": "shell",
+            "label": "init-db-prod",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "scripts.db_setup",
+                "--init-prod",
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "fill-db-prod",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "scripts.db_setup",
+                "--fill-prod",
             ],
             "problemMatcher": []
         },
@@ -28,7 +63,8 @@
             "label": "stop-db",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "scripts/db_setup.py",
+                "-m",
+                "scripts.db_setup",
                 "--stop"
             ],
             "problemMatcher": []
@@ -38,17 +74,19 @@
             "label": "start-db",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "scripts/db_setup.py",
+                "-m",
+                "scripts.db_setup",
                 "--start"
             ],
             "problemMatcher": []
         },
-                {
+        {
             "type": "shell",
             "label": "reset-db",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "scripts/db_setup.py",
+                "-m",
+                "scripts.db_setup",
                 "--reset"
             ],
             "problemMatcher": []

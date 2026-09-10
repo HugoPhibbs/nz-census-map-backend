@@ -1,43 +1,18 @@
 import io
 import subprocess
 import argparse
-import psycopg_pool
-import functools
 import pandas as pd
-import psycopg
-from psycopg.types.numeric import NumericLoader, NumericBinaryLoader
+from src.utils import get_db_connection_pool
 
-# The below code handles converting NUMERIC to float or int.
-# See https://www.psycopg.org/docs/usage.html#numbers-adaptation
-
-def normalize_numeric(value):
-    return int(value) if value == value.to_integral_value() else float(value)
-
-class IntOrFloatNumericLoader(NumericLoader):
-    def load(self, data):
-        return normalize_numeric(super().load(data))
-
-class IntOrFloatNumericBinaryLoader(NumericBinaryLoader):
-    def load(self, data):
-        return normalize_numeric(super().load(data))
-
-def start_db():
+def start_dev_db():
     subprocess.run(["docker", "compose", "up", "-d"], cwd="./scripts/db", check=True)
 
-def stop_db(reset=False):
+def stop_dev_db(reset=False):
     down_cmd = ["docker", "compose", "down", "-v"] if reset else ["docker", "compose", "down"]
     subprocess.run(down_cmd, cwd="./scripts/db", check=True)
     
-@functools.lru_cache(maxsize=1)
-def get_db_connection_pool():
-    psycopg.adapters.register_loader("numeric", IntOrFloatNumericLoader)
-    psycopg.adapters.register_loader("numeric", IntOrFloatNumericBinaryLoader)
-    return psycopg_pool.ConnectionPool(conninfo="dbname=census-db user=admin password=devpassword host=localhost port=5432", min_size=1, max_size=10)
-
-def fill_variables_table():
+def fill_variables_table(pool):
     all_variable_ids = pd.read_parquet("./data/db-tables/demographic_variables_table.parquet")
-    
-    pool = get_db_connection_pool()
     
     with pool.connection() as conn:
         with conn.cursor() as cur:
@@ -51,10 +26,8 @@ def fill_variables_table():
                     (row.variable_id, row.variable_unit, row.plain_name)
                 )
 
-def fill_areas_table():
+def fill_areas_table(pool):
     df = pd.read_parquet("./data/db-tables/areas_table.parquet")  # Ensure area_code is read as string to preserve leading zeros
-    
-    pool = get_db_connection_pool()
     
     with pool.connection() as conn:
         with conn.cursor() as cur:
@@ -69,10 +42,8 @@ def fill_areas_table():
                 )
     
 
-def fill_demographic_data_table():
+def fill_demographic_data_table(pool):
     df = pd.read_parquet("./data/db-tables/demographic_data_table.parquet")
-
-    pool = get_db_connection_pool()
 
     with pool.connection() as conn:
         with conn.cursor() as cur:
@@ -103,28 +74,43 @@ def fill_demographic_data_table():
 
         conn.commit()
     
-def fill_tables():
-    fill_variables_table()
-    fill_areas_table()
-    fill_demographic_data_table()
-    
+def fill_tables(pool=get_db_connection_pool()):
+    fill_variables_table(pool)
+    fill_areas_table(pool)
+    fill_demographic_data_table(pool)
+
+def create_tables_prod():
+    pool = get_db_connection_pool(use_dev=False)
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            with open("./scripts/db/create_tables.sql", "r") as f:
+                cur.execute(f.read())
+        conn.commit()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Set up the database using Docker Compose.")
-    parser.add_argument("--start", default=False, action="store_true", help="Create the database using Docker Compose.")
-    parser.add_argument("--stop", default=False, action="store_true", help="Drop the database using Docker Compose.")
-    parser.add_argument("--fill", default=False, action="store_true", help="Fill the database tables with data.")
-    parser.add_argument("--reset", "-rv", default=False, action="store_true", help="Reset the database by stopping, starting, and filling it.")
+    
+    parser.add_argument("--start-dev", default=False, action="store_true", help="Create the database using Docker Compose.")
+    parser.add_argument("--stop-dev", default=False, action="store_true", help="Drop the database using Docker Compose.")
+    parser.add_argument("--reset-dev", "-rv", default=False, action="store_true", help="Reset the database by stopping, starting, and filling it.")
+    parser.add_argument("--fill-dev", default=False, action="store_true", help="Fill the database tables with data.")
+    
+    parser.add_argument("--init-prod", default=False, action="store_true", help="Create the production database tables.")
+    parser.add_argument("--fill-prod", default=False, action="store_true", help="Fill the database tables with data.")
     
     args = parser.parse_args()
     
-    if args.stop or args.reset:
-        stop_db(args.reset)
-    elif args.start:
-        start_db()
-    elif args.fill:
-        fill_tables()
+    if args.stop_dev or args.reset_dev:
+        stop_dev_db(args.reset_dev)
+    elif args.start_dev:
+        start_dev_db()
+    elif args.init_prod:
+        create_tables_prod()
+    elif args.fill_dev:
+        fill_tables(get_db_connection_pool(use_dev=True))
+    elif args.fill_prod:
+        fill_tables(get_db_connection_pool(use_dev=False))
     else:
         print("No action specified. Use --start, --stop, --fill, or --reset-vols.")
         
-__all__ = ["get_db_connection_pool"]

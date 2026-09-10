@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from flask import send_file
 from waitress import serve
-from scripts.db_setup import get_db_connection_pool
+from utils import get_db_connection_pool
 from psycopg.rows import dict_row
 from pypika import Query, Table
 
