@@ -11,7 +11,17 @@
                 "-m",
                 "deploy.deploy",
                 "-df",
-                "--deploy-func"
+            ],
+            "problemMatcher": []
+        },
+                {
+            "type": "shell",
+            "label": "tf-apply",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "deploy.deploy",
+                "-a",
             ],
             "problemMatcher": []
         },
@@ -36,7 +46,7 @@
             ],
             "problemMatcher": []
         },
-                {
+        {
             "type": "shell",
             "label": "init-db-prod",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",

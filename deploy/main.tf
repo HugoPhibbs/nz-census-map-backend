@@ -40,6 +40,10 @@ resource "azurerm_linux_function_app" "func" {
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
 
+  app_settings = {
+    AzureWebJobsFeatureFlags = "EnableWorkerIndexing"
+  }
+
   site_config {
     application_stack {
       python_version = "3.12"
