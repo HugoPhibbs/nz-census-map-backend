@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, request
 from flask_cors import CORS
 from flask import send_file
@@ -5,9 +7,16 @@ from waitress import serve
 from src.utils import get_db_connection_pool
 from psycopg.rows import dict_row
 from pypika import Query, Table
+from dotenv import load_dotenv
+load_dotenv()  
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
+
+@app.before_request
+def check_auth():
+    if request.headers.get('Authorization') != f"Bearer {os.getenv('BEARER_TOKEN')}":
+        return {"error": "Unauthorized"}, 401
 
 @app.route("/hello-world")
 def hello_world():
