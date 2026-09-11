@@ -3,8 +3,4 @@ data/*
 .env
 *.pyc
 
-local.settings.json
-*/.terraform/*
-
-terraform.tfstate*
-.terraform.lock.hcl
+env.yaml
