@@ -2,12 +2,16 @@ from flask import Flask, request
 from flask_cors import CORS
 from flask import send_file
 from waitress import serve
-from utils import get_db_connection_pool
+from src.utils import get_db_connection_pool
 from psycopg.rows import dict_row
 from pypika import Query, Table
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
+
+@app.route("/hello-world")
+def hello_world():
+    return {"message": "Hello, World!"}, 200
 
 @app.route("/area")
 def get_area_info():
@@ -98,6 +102,7 @@ def get_map():
         mimetype='application/octet-stream',
         conditional=True
     )
+    
 @app.route('/sa1.pmtiles')
 def get_sa1_map():
     return send_file(

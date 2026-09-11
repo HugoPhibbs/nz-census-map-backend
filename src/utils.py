@@ -35,5 +35,6 @@ def get_db_connection_pool(use_dev=None):
         conn_info = os.getenv('DB_CONNECTION_STRING_PROD')
         
         
+        
     return psycopg_pool.ConnectionPool(conninfo=conn_info, min_size=1, max_size=10)
 
