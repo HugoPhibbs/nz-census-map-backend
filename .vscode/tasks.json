@@ -8,7 +8,7 @@
             "label": "deploy-api",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "api_deploy.py"
+                "deploy.py"
             ],
             "problemMatcher": []
         },
