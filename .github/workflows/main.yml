@@ -31,4 +31,7 @@ jobs:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
           BUCKET_NAME: ${{ vars.BUCKET_NAME }}
           FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          API_SA_NAME: ${{ vars.API_SA_NAME }}
+          PROJECT_ID: ${{ vars.PROJECT_ID }}
         run: python deploy.py -dcr

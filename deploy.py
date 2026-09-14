@@ -34,15 +34,15 @@ def deploy_bucket():
 
 def create_service_account():
     sa_exists_cmd = ["gcloud", "iam", "service-accounts", "describe",
-                     f"{os.getenv('SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com"]
+                     f"{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com"]
     if subprocess.run(sa_exists_cmd, capture_output=True, shell=True).returncode == 0:
         print(
-            f"Service account {os.getenv('SA_NAME')} already exists. Skipping creation.")
+            f"Service account {os.getenv('API_SA_NAME')} already exists. Skipping creation.")
         return
 
     create_sa_cmd = ["gcloud", "iam",
                      "service-accounts",
-                     "create", os.getenv('SA_NAME'),
+                     "create", os.getenv('API_SA_NAME'),
                      "--display-name=Cloud Run SA",
                      ]
 
@@ -50,15 +50,15 @@ def create_service_account():
 
     grant_bucket_access_cmd = [
         "gcloud", "storage", "buckets", "add-iam-policy-binding", f"gs://{os.getenv('BUCKET_NAME')}",
-        "--member", f"serviceAccount:{os.getenv('SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
+        "--member", f"serviceAccount:{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
         "--role", "roles/storage.objectAdmin",
     ]
     subprocess.run(grant_bucket_access_cmd, check=True, shell=True)
 
     grant_token_creator_cmd = [
         "gcloud", "iam", "service-accounts", "add-iam-policy-binding",
-        f"{os.getenv('SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
-        "--member", f"serviceAccount:{os.getenv('SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
+        f"{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
+        "--member", f"serviceAccount:{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
         "--role", "roles/iam.serviceAccountTokenCreator",
     ]
     subprocess.run(grant_token_creator_cmd, check=True, shell=True)
@@ -80,7 +80,7 @@ def deploy_cloud_run():
         f'--source . '
         f'--region {os.getenv("GCP_REGION")} '
         f'--allow-unauthenticated '
-        f'--service-account {os.getenv("SA_NAME")}@{os.getenv("PROJECT_ID")}.iam.gserviceaccount.com '
+        f'--service-account {os.getenv("API_SA_NAME")}@{os.getenv("PROJECT_ID")}.iam.gserviceaccount.com '
     )
 
     env_str = ",".join(f"{k}={os.getenv(k)}" for k in
@@ -91,7 +91,7 @@ def deploy_cloud_run():
                         "FRONTEND_DOMAIN"
                         ])
     
-    deploy_cmd = f"{deploy_cmd} --set-env-vars={env_str}"
+    deploy_cmd = f'{deploy_cmd} --set-env-vars="{env_str}"'
     
     subprocess.run(deploy_cmd, check=True, shell=True)
 
