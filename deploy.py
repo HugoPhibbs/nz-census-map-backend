@@ -1,6 +1,8 @@
 import os
 import subprocess
 from dotenv import load_dotenv
+import argparse
+
 load_dotenv()
 
 
@@ -84,9 +86,31 @@ def deploy_cloud_run():
 
 
 if __name__ == "__main__":    
-    set_project()
-    deploy_bucket()
-    create_service_account()
-    deploy_cloud_run()
-    fill_bucket_with_data()
-    update_bucket_cors()
+    parser = argparse.ArgumentParser(description="Deploy NZ Census Map Backend")
+    parser.add_argument("--set-project", "-sp", action="store_true", help="Set the GCP project")
+    parser.add_argument("--deploy-bucket", "-db", action="store_true", help="Deploy the GCP bucket")
+    parser.add_argument("--create-service-account", "-csa", action="store_true", help="Create the service account")
+    parser.add_argument("--deploy-cloud-run", "-dcr", action="store_true", help="Deploy the Cloud Run service")
+    parser.add_argument("--fill-bucket-with-data", "-fbd", action="store_true", help="Fill the bucket with data")
+    parser.add_argument("--update-bucket-cors", "-ubc", action="store_true", help="Update the bucket CORS settings")
+    parser.add_argument("--all", "-a", action="store_true", help="Run all steps")
+    
+    args = parser.parse_args()
+
+    if args.set_project or args.all:
+        set_project()
+        
+    if args.deploy_basket or args.all:
+        deploy_bucket()
+        
+    if args.create_service_account or args.all:
+        create_service_account()
+        
+    if args.deploy_cloud_run or args.all:
+        deploy_cloud_run()
+        
+    if args.fill_bucket_with_data or args.all:
+        fill_bucket_with_data()
+
+    if args.update_bucket_cors or args.all:
+        update_bucket_cors()
