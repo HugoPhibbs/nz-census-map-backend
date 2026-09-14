@@ -139,7 +139,5 @@ def get_signed_url(file_name):
 
 
 if __name__ == '__main__':
-    # app.run(debug=True, threaded=True)
-
     print("Running a production server at http://localhost:5000")
     serve(app, host='0.0.0.0', port=5000, threads=4)
