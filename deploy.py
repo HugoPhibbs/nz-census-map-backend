@@ -13,9 +13,11 @@ def set_project():
 
 
 def update_bucket_cors():
-    update_cors_cmd = ["gcloud", "storage", "buckets", "update", f"gs://{os.getenv('BUCKET_NAME')}", "--cors-file=./deploy/bucket-cors.json"]
-    
+    update_cors_cmd = ["gcloud", "storage", "buckets", "update",
+                       f"gs://{os.getenv('BUCKET_NAME')}", "--cors-file=./deploy/bucket-cors.json"]
+
     subprocess.run(update_cors_cmd, check=True, shell=True)
+
 
 def deploy_bucket():
     bucket_exists_cmd = ["gcloud", "storage", "buckets",
@@ -71,45 +73,61 @@ def fill_bucket_with_data():
 
 
 def deploy_cloud_run():
-    freeze_requirements_cmd = ["pip", "freeze", ">", "./requirements.txt"]
-    subprocess.run(freeze_requirements_cmd, check=True, shell=True)
+    subprocess.run("pip freeze > ./requirements.txt", check=True, shell=True)
 
-    cmd = ["gcloud", "run",
-           "deploy", "nz-census-map-api",
-           "--source", ".",
-           "--region", f"{os.getenv('GCP_REGION')}",
-           "--allow-unauthenticated",
-           "--service-account", f"{os.getenv('SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
-           "--env-vars-file=env.yaml"]
+    deploy_cmd = (
+        f'gcloud run deploy nz-census-map-api '
+        f'--source . '
+        f'--region {os.getenv("GCP_REGION")} '
+        f'--allow-unauthenticated '
+        f'--service-account {os.getenv("SA_NAME")}@{os.getenv("PROJECT_ID")}.iam.gserviceaccount.com '
+    )
 
-    subprocess.run(cmd, check=True, shell=True)
-
-
-if __name__ == "__main__":    
-    parser = argparse.ArgumentParser(description="Deploy NZ Census Map Backend")
-    parser.add_argument("--set-project", "-sp", action="store_true", help="Set the GCP project")
-    parser.add_argument("--deploy-bucket", "-db", action="store_true", help="Deploy the GCP bucket")
-    parser.add_argument("--create-service-account", "-csa", action="store_true", help="Create the service account")
-    parser.add_argument("--deploy-cloud-run", "-dcr", action="store_true", help="Deploy the Cloud Run service")
-    parser.add_argument("--fill-bucket-with-data", "-fbd", action="store_true", help="Fill the bucket with data")
-    parser.add_argument("--update-bucket-cors", "-ubc", action="store_true", help="Update the bucket CORS settings")
-    parser.add_argument("--all", "-a", action="store_true", help="Run all steps")
+    env_str = ",".join(f"{k}={os.getenv(k)}" for k in
+                       ["DB_CONNECTION_STRING_PROD",
+                        "STATS_NZ_API_KEY",
+                        "BEARER_TOKEN",
+                        "BUCKET_NAME",
+                        "FRONTEND_DOMAIN"
+                        ])
     
+    deploy_cmd = f"{deploy_cmd} --set-env-vars={env_str}"
+    
+    subprocess.run(deploy_cmd, check=True, shell=True)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Deploy NZ Census Map Backend")
+    parser.add_argument("--set-project", "-sp",
+                        action="store_true", help="Set the GCP project")
+    parser.add_argument("--deploy-bucket", "-db",
+                        action="store_true", help="Deploy the GCP bucket")
+    parser.add_argument("--create-service-account", "-csa",
+                        action="store_true", help="Create the service account")
+    parser.add_argument("--deploy-cloud-run", "-dcr",
+                        action="store_true", help="Deploy the Cloud Run service")
+    parser.add_argument("--fill-bucket", "-fb",
+                        action="store_true", help="Fill the bucket with data")
+    parser.add_argument("--update-bucket-cors", "-ubc",
+                        action="store_true", help="Update the bucket CORS settings")
+    parser.add_argument("--all", "-a", action="store_true",
+                        help="Run all steps")
+
     args = parser.parse_args()
 
     if args.set_project or args.all:
         set_project()
-        
-    if args.deploy_basket or args.all:
+
+    if args.deploy_bucket or args.all:
         deploy_bucket()
-        
+
     if args.create_service_account or args.all:
         create_service_account()
-        
+
     if args.deploy_cloud_run or args.all:
         deploy_cloud_run()
-        
-    if args.fill_bucket_with_data or args.all:
+
+    if args.fill_bucket or args.all:
         fill_bucket_with_data()
 
     if args.update_bucket_cors or args.all:
