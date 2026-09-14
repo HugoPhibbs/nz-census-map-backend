@@ -1,0 +1,50 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="sORWEqDlmvozaq3ogonh">
+    <mxGraphModel dx="844" dy="388" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=8 8;" value="" vertex="1">
+          <mxGeometry height="100" width="290" x="260" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-7" edge="1" parent="1" source="IbVwUJFVxbKXKVH6sNB3-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="IbVwUJFVxbKXKVH6sNB3-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-13" connectable="0" parent="IbVwUJFVxbKXKVH6sNB3-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="SQL queries/responses" vertex="1">
+          <mxGeometry relative="1" x="-0.0778" y="3" as="geometry">
+            <mxPoint y="8" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Flask API &lt;br&gt;(Cloud Run)" vertex="1">
+          <mxGeometry height="60" width="120" x="280" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="Next.js Frontend (Vercel)" vertex="1">
+          <mxGeometry height="60" width="251" x="279" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#CEF6D5;strokeColor=#82b366;" value="Postgres DB (Neon)" vertex="1">
+          <mxGeometry height="60" width="120" x="280" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-20" edge="1" parent="1" source="IbVwUJFVxbKXKVH6sNB3-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="470" y="90.00000000000006" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Cloud Storage" vertex="1">
+          <mxGeometry height="60" width="120" x="410" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="pmtiles&amp;nbsp;&lt;br&gt;(via HTTP range requests)" vertex="1">
+          <mxGeometry height="30" width="100" x="470" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-15" edge="1" parent="1" source="IbVwUJFVxbKXKVH6sNB3-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="IbVwUJFVxbKXKVH6sNB3-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-21" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="HTTP requests" vertex="1">
+          <mxGeometry height="30" width="60" x="270" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="IbVwUJFVxbKXKVH6sNB3-22" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Google Cloud" vertex="1">
+          <mxGeometry height="30" width="120" x="455" y="255" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
