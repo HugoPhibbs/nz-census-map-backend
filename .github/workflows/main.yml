@@ -2,9 +2,9 @@ name: Google Cloud Run Deploy
 
 on:
   push:
-    branches: [ "deploy" ]
+    branches: [ "prod" ]
   pull_request:
-    branches: [ "deploy" ]
+    branches: [ "prod" ]
 
 jobs:
   deploy:
