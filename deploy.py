@@ -77,6 +77,7 @@ def deploy_cloud_run():
 
     deploy_cmd = (
         f'gcloud run deploy nz-census-map-api '
+        f'--verbosity=debug '
         f'--source . '
         f'--region {os.getenv("GCP_REGION")} '
         f'--allow-unauthenticated '
