@@ -2,6 +2,8 @@
 
 ![Deployment](https://github.com/HugoPhibbs/nz-census-map-backend/actions/workflows/main.yml/badge.svg)
 
+_Main repository: [nz-census-map](https://github.com/HugoPhibbs/nz-census-map)_
+
 Backend code for [NZ Census Map](https://github.com/HugoPhibbs/nz-census-map). Written with Python using Flask & Psycopg. The Postgres database is deployed onto [Neon](https://neon.com/), while Google's [Cloud Run](https://cloud.google.com/run) and [Cloud Storage](https://docs.cloud.google.com/storage/docs) are used to for the API and object storage respectively.
 
 ## Instructions
