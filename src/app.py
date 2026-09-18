@@ -64,10 +64,13 @@ def get_region_stats():
 @app.route("/stats/variable/avgs")
 @cache.cached(timeout=3600)
 def get_variable_avgs():
+    census_year = request.args.get('census_year', 2023)
+    
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                "SELECT variable_id, census_year, national_avg FROM NATIONAL_PERCENTAGE_AVERAGES"
+                "SELECT variable_id, national_avg FROM NATIONAL_PERCENTAGE_AVERAGES WHERE census_year = %s",
+                (census_year,)
             )
             result = cur.fetchall()
             return result, 200
