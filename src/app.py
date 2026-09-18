@@ -11,6 +11,7 @@ from datetime import timedelta
 import google.auth
 import google.auth.transport.requests
 from flask_caching import Cache
+from cachetools import cached, TTLCache
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -73,7 +74,7 @@ def get_variable_avgs():
                 (census_year,)
             )
             result = cur.fetchall()
-            return result, 200
+            return {row["variable_id"]: row["national_avg"] for row in result}, 200
 
 
 @app.route("/stats/variable/ids/to-unit")
@@ -139,21 +140,21 @@ def get_all_regions_stats(variable_id, census_year):
             return result, 200
 
 
-@app.route("/pmtiles/<file_name>")
-def get_signed_url(file_name):
+@cached(TTLCache(maxsize=5, ttl=600))
+def _signed_url(file_name):
     credentials, _ = google.auth.default()
     credentials.refresh(google.auth.transport.requests.Request())
 
-    storage_client = storage.Client()
-    blob = storage_client.bucket(os.getenv("BUCKET_NAME")).blob(file_name)
-    url = blob.generate_signed_url(
+    blob = storage.Client().bucket(os.getenv("BUCKET_NAME")).blob(file_name)
+    return blob.generate_signed_url(
         expiration=timedelta(minutes=15),
-        # Tell service account to use its own credentials to sign the URL
-        service_account_email=credentials.service_account_email,
+        service_account_email=os.getenv("SERVICE_ACCOUNT_EMAIL"),
         access_token=credentials.token,
     )
 
-    return redirect(url, code=302)
+@app.route("/pmtiles/<file_name>")
+def get_signed_url(file_name):
+    return redirect(_signed_url(file_name), code=302)
 
 
 if __name__ == '__main__':
