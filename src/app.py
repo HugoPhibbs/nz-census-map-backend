@@ -10,6 +10,7 @@ from google.cloud import storage
 from datetime import timedelta
 import google.auth
 import google.auth.transport.requests
+from flask_caching import Cache
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -17,6 +18,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
 @app.before_request
 def check_auth():
@@ -25,13 +27,8 @@ def check_auth():
     if request.headers.get('Authorization') != f"Bearer {os.getenv('BEARER_TOKEN')}":
         return {"error": "Unauthorized"}, 401
 
-
-@app.route("/hello-world")
-def hello_world():
-    return {"message": "Hello, World!"}, 200
-
-
 @app.route("/area")
+@cache.cached(query_string=True)
 def get_area_info():
     census_year = request.args.get('census_year')
     area_code = request.args.get('area_code')
@@ -49,6 +46,7 @@ def get_area_info():
 
 
 @app.route("/stats/area")
+@cache.cached(query_string=True)
 def get_region_stats():
     census_year = request.args.get('census_year')
     area_code = request.args.get('area_code')
@@ -64,6 +62,7 @@ def get_region_stats():
 
 
 @app.route("/stats/variable/avgs")
+@cache.cached(timeout=3600)
 def get_variable_avgs():
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
@@ -75,6 +74,7 @@ def get_variable_avgs():
 
 
 @app.route("/stats/variable/ids/to-unit")
+@cache.cached()
 def get_variable_ids_to_unit():
     with get_db_connection_pool().connection() as conn:
         with conn.cursor() as cur:
@@ -86,6 +86,7 @@ def get_variable_ids_to_unit():
 
 
 @app.route("/stats/variable/ids/to-name")
+@cache.cached()
 def get_variable_ids_to_name():
     with get_db_connection_pool().connection() as conn:
         with conn.cursor() as cur:
@@ -96,6 +97,7 @@ def get_variable_ids_to_name():
 
 
 @app.route("/stats/variable/ids")
+@cache.cached()
 def get_all_variables():
     with get_db_connection_pool().connection() as conn:
         with conn.cursor() as cur:
@@ -106,6 +108,7 @@ def get_all_variables():
 
 
 @app.route("/stats/variable/<variable_id>/<census_year>")
+@cache.cached(query_string=True)
 def get_all_regions_stats(variable_id, census_year):
     drop_pop_data = request.args.get(
         'drop_pop_data', 'false').lower() == 'true'

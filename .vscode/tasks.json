@@ -3,6 +3,17 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
+                {
+            "type": "shell",
+            "label": "freeze-reqs",
+            "command": "${workspaceFolder}/.venv/Scripts/pip.exe",
+            "args": [
+                "freeze",
+                ">",
+                "./requirements.txt"
+            ],
+            "problemMatcher": []
+        },
         {
             "type": "shell",
             "label": "deploy-api",
