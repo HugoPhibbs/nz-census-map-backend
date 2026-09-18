@@ -63,12 +63,24 @@ def get_region_stats():
             return result, 200
 
 
+@app.route("/stats/variable/avgs")
+def get_variable_avgs():
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                "SELECT variable_id, census_year, national_avg FROM NATIONAL_PERCENTAGE_AVERAGES"
+            )
+            result = cur.fetchall()
+            return result, 200
+
+
 @app.route("/stats/variable/ids/to-unit")
 def get_variable_ids_to_unit():
     with get_db_connection_pool().connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT variable_id, variable_unit FROM demographic_variables")
+                "SELECT variable_id, variable_unit FROM demographic_variables"
+            )
             result = cur.fetchall()
             return {row[0]: row[1] for row in result}, 200
 
@@ -125,13 +137,13 @@ def get_all_regions_stats(variable_id, census_year):
 def get_signed_url(file_name):
     credentials, _ = google.auth.default()
     credentials.refresh(google.auth.transport.requests.Request())
-    
+
     storage_client = storage.Client()
     blob = storage_client.bucket(os.getenv("BUCKET_NAME")).blob(file_name)
     url = blob.generate_signed_url(
         expiration=timedelta(minutes=15),
         # Tell service account to use its own credentials to sign the URL
-        service_account_email=credentials.service_account_email, 
+        service_account_email=credentials.service_account_email,
         access_token=credentials.token,
     )
 
