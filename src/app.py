@@ -1,19 +1,19 @@
 import os
-
-from flask import Flask, redirect, request
-from flask_cors import CORS
-from waitress import serve
-from src.utils import get_db_connection_pool
-from psycopg.rows import dict_row
-from pypika import Query, Table
-from google.cloud import storage
 from datetime import timedelta
+
 import google.auth
 import google.auth.transport.requests
-from flask_caching import Cache
-from cachetools import cached, TTLCache
-
+from cachetools import TTLCache, cached
 from dotenv import load_dotenv
+from flask import Flask, redirect, request
+from flask_caching import Cache
+from flask_cors import CORS
+from google.cloud import storage
+from psycopg.rows import dict_row
+from pypika import Query, Table
+
+from src.utils import get_db_connection_pool
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -21,7 +21,6 @@ CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
-@app.before_request
 def check_auth():
     if request.path.startswith('/pmtiles/'):
         return
@@ -80,35 +79,32 @@ def get_variable_avgs():
 @app.route("/stats/variable/ids/to-unit")
 @cache.cached()
 def get_variable_ids_to_unit():
-    with get_db_connection_pool().connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT variable_id, variable_unit FROM demographic_variables"
-            )
-            result = cur.fetchall()
-            return {row[0]: row[1] for row in result}, 200
+    with get_db_connection_pool().connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT variable_id, variable_unit FROM demographic_variables"
+        )
+        result = cur.fetchall()
+        return {row[0]: row[1] for row in result}, 200
 
 
 @app.route("/stats/variable/ids/to-name")
 @cache.cached()
 def get_variable_ids_to_name():
-    with get_db_connection_pool().connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT variable_id, plain_name FROM demographic_variables")
-            result = cur.fetchall()
-            return {row[0]: row[1] for row in result}, 200
+    with get_db_connection_pool().connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT variable_id, plain_name FROM demographic_variables")
+        result = cur.fetchall()
+        return {row[0]: row[1] for row in result}, 200
 
 
 @app.route("/stats/variable/ids")
 @cache.cached()
 def get_all_variables():
-    with get_db_connection_pool().connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT variable_id FROM demographic_variables")
-            result = cur.fetchall()
-            names = [row[0] for row in result]
-            return names, 200
+    with get_db_connection_pool().connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT variable_id FROM demographic_variables")
+        result = cur.fetchall()
+        names = [row[0] for row in result]
+        return names, 200
 
 
 @app.route("/stats/variable/<variable_id>/<census_year>")
@@ -162,4 +158,5 @@ def get_signed_url(file_name):
 
 if __name__ == '__main__':
     print("Running a production server at http://localhost:5000")
+    from waitress import serve
     serve(app, host='0.0.0.0', port=5000, threads=4)

@@ -1,5 +1,5 @@
-import xml.etree.ElementTree as ET
 import csv
+import xml.etree.ElementTree as ET
 
 META_DATA_FOLDER = "data/meta-data"
 XML_PATH = "topics-sa1-2023.xml"

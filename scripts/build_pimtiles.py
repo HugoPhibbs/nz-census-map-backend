@@ -1,6 +1,7 @@
-import subprocess
-import os
 import argparse
+import os
+import subprocess
+
 
 def fetch_basemap():
     data_dir = os.path.join(os.getcwd(), "data")

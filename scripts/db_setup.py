@@ -1,8 +1,11 @@
+import argparse
 import io
 import subprocess
-import argparse
+
 import pandas as pd
+
 from src.utils import get_db_connection_pool
+
 
 def start_dev_db():
     subprocess.run(["docker", "compose", "up", "-d"], cwd="./scripts/db", check=True)
@@ -29,17 +32,16 @@ def fill_variables_table(pool):
 def fill_areas_table(pool):
     df = pd.read_parquet("./data/db-tables/areas_table.parquet")  # Ensure area_code is read as string to preserve leading zeros
     
-    with pool.connection() as conn:
-        with conn.cursor() as cur:
-            for area in df.itertuples(index=False):
-                cur.execute(
-                    """
+    with pool.connection() as conn, conn.cursor() as cur:
+        for area in df.itertuples(index=False):
+            cur.execute(
+                """
                     INSERT INTO AREAS (area_name, area_code, census_year, area_type)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
                     """,
-                    (area.area_name, area.area_code, area.census_year, area.area_type)
-                )
+                (area.area_name, area.area_code, area.census_year, area.area_type)
+            )
     
 
 def fill_demographic_data_table(pool):

@@ -1,6 +1,7 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import math
+
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # --- Load and filter ---
 df = pd.read_parquet(

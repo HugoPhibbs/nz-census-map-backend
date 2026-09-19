@@ -1,9 +1,11 @@
 import functools
 import os
+
 import psycopg
 import psycopg_pool
-from psycopg.types.numeric import NumericLoader, NumericBinaryLoader
 from dotenv import load_dotenv
+from psycopg.types.numeric import NumericBinaryLoader, NumericLoader
+
 load_dotenv() 
 
 # The below code handles converting NUMERIC to float or int.

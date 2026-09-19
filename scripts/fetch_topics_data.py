@@ -1,9 +1,10 @@
 import io
-import xml.etree.ElementTree as ET
 import os
-from dotenv import load_dotenv
-import requests
+import xml.etree.ElementTree as ET
+
 import pandas as pd
+import requests
+from dotenv import load_dotenv
 
 load_dotenv()
 
