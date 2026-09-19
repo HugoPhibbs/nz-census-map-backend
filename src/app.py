@@ -144,11 +144,14 @@ def get_all_regions_stats(variable_id, census_year):
 def _signed_url(file_name):
     credentials, _ = google.auth.default()
     credentials.refresh(google.auth.transport.requests.Request())
+    
+    use_dev_creds = os.getenv("USE_DEV_CREDS", "false").lower() == "true"
+    service_account_email = os.getenv("SERVICE_ACCOUNT_EMAIL") if use_dev_creds else credentials.service_account_email
 
     blob = storage.Client().bucket(os.getenv("BUCKET_NAME")).blob(file_name)
     return blob.generate_signed_url(
         expiration=timedelta(minutes=15),
-        service_account_email=os.getenv("SERVICE_ACCOUNT_EMAIL"),
+        service_account_email=service_account_email,
         access_token=credentials.token,
     )
 
