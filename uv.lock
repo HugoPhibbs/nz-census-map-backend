@@ -979,13 +979,13 @@ dependencies = [
     { name = "psycopg-pool" },
     { name = "pypika" },
     { name = "python-dotenv" },
-    { name = "waitress" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "matplotlib" },
     { name = "pandas" },
+    { name = "waitress" },
 ]
 
 [package.metadata]
@@ -1001,13 +1001,13 @@ requires-dist = [
     { name = "psycopg-pool", specifier = ">=3.3.2" },
     { name = "pypika", specifier = ">=0.51.1" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
-    { name = "waitress", specifier = ">=3.0.2" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "pandas", specifier = ">=3.0.6" },
+    { name = "waitress", specifier = ">=3.0.2" },
 ]
 
 [[package]]
