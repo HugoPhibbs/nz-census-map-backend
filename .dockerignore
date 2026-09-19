@@ -4,3 +4,7 @@ scripts
 .venv
 .env
 deploy.py
+docs
+.github
+README.md
+*.pyc
