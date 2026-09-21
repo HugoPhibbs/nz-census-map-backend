@@ -1,14 +1,9 @@
 import os
-from datetime import timedelta
 
-import google.auth
-import google.auth.transport.requests
-from cachetools import TTLCache, cached
 from dotenv import load_dotenv
-from flask import Flask, redirect, request
+from flask import Flask, request
 from flask_caching import Cache
 from flask_cors import CORS
-from google.cloud import storage
 from psycopg.rows import dict_row
 from pypika import Query, Table
 
@@ -21,9 +16,10 @@ CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
+@app.before_request
 def check_auth():
-    if request.path.startswith('/pmtiles/'):
-        return
+    if request.method == 'OPTIONS':
+        return 
     if request.headers.get('Authorization') != f"Bearer {os.getenv('BEARER_TOKEN')}":
         return {"error": "Unauthorized"}, 401
 
@@ -134,27 +130,6 @@ def get_all_regions_stats(variable_id, census_year):
             cur.execute(q.get_sql())
             result = cur.fetchall()
             return result, 200
-
-
-@cached(TTLCache(maxsize=5, ttl=600))
-def _signed_url(file_name):
-    credentials, _ = google.auth.default()
-    credentials.refresh(google.auth.transport.requests.Request())
-    
-    use_dev_creds = os.getenv("USE_DEV_CREDS", "false").lower() == "true"
-    service_account_email = os.getenv("SERVICE_ACCOUNT_EMAIL") if use_dev_creds else credentials.service_account_email
-
-    blob = storage.Client().bucket(os.getenv("BUCKET_NAME")).blob(file_name)
-    return blob.generate_signed_url(
-        expiration=timedelta(minutes=15),
-        service_account_email=service_account_email,
-        access_token=credentials.token,
-    )
-
-@app.route("/pmtiles/<file_name>")
-def get_signed_url(file_name):
-    return redirect(_signed_url(file_name), code=302)
-
 
 if __name__ == '__main__':
     print("Running a production server at http://localhost:5000")
