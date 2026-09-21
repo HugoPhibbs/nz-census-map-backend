@@ -21,22 +21,27 @@ def update_bucket_cors():
 
 
 def deploy_bucket():
+    bucket_name = os.getenv("BUCKET_NAME")
+    
     bucket_exists_cmd = ["gcloud", "storage", "buckets",
-                         "describe", f"gs://{os.getenv('BUCKET_NAME')}"]
-    if subprocess.run(bucket_exists_cmd, capture_output=True, shell=True).returncode == 0:
+                         "describe", f"gs://{bucket_name}"]
+    if  subprocess.run(bucket_exists_cmd, capture_output=True, shell=True).returncode == 0:
         print(
-            f"Bucket {os.getenv('BUCKET_NAME')} already exists. Skipping creation.")
+            f"Bucket {bucket_name} already exists. Skipping creation.")
         return
 
     create_bucket_cmd = ["gcloud", "storage", "buckets",
-                         "create", f"gs://{os.getenv('BUCKET_NAME')}", f"--location={os.getenv('GCP_REGION')}"]
+                         "create", f"gs://{bucket_name}", f"--location={os.getenv('GCP_REGION')}"]
     subprocess.run(create_bucket_cmd, check=True, shell=True)
 
+    subprocess.run(["gcloud", "storage", "buckets", "add-iam-policy-binding", bucket_name,
+                    "--member=allUsers", "--role=roles/storage.legacyObjectReader"],
+                   check=True, shell=True)
 
 def create_service_account():
     sa_exists_cmd = ["gcloud", "iam", "service-accounts", "describe",
                      f"{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com"]
-    if subprocess.run(sa_exists_cmd, capture_output=True, shell=True).returncode == 0:
+    if subprocess.run(sa_exists_cmd, capture_output=True, shell=True, check=True).returncode == 0:
         print(
             f"Service account {os.getenv('API_SA_NAME')} already exists. Skipping creation.")
         return
@@ -81,6 +86,8 @@ def deploy_cloud_run():
         f'--verbosity=debug '
         f'--source . '
         f'--region {os.getenv("GCP_REGION")} '
+        f'--cpu-boost '
+        f'--min-instances 1 '
         f'--allow-unauthenticated '
         f'--service-account {os.getenv("API_SA_NAME")}@{os.getenv("PROJECT_ID")}.iam.gserviceaccount.com '
     )
