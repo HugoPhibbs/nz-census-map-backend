@@ -24,11 +24,18 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
-            Review `git diff ${{ env.BASE }} ${{ env.HEAD }}` for obvious bugs, security issues
-            and significant code quality problems. No nitpicks.
-            PR NUMBER: ${{ github.event.pull_request.number }}
-            If PR NUMBER is set, post findings with `gh pr comment ${{ github.event.pull_request.number }}`.
-            Otherwise post them with
-            `gh api repos/${{ github.repository }}/commits/${{ env.HEAD }}/comments -f body="..."`.
+            You're a PR reviewer bot.
+            Review `git diff ${{ env.BASE }} ${{ env.HEAD }}` for obvious bugs, security issues and significant code quality problems. No nitpicks.
+            Post findings with `gh pr comment ${{ github.event.pull_request.number }}`.
+            Format your answer (in markdown) as:
+            # [Bot] Code Review:
+            ---
+            1. ...
+            2. ...
+            ...
+            n. ...
+
+            Add any other relevant comments or suggestions for improvement.
+
           claude_args: |
-            --allowedTools "Bash(git diff:*),Bash(gh pr comment:*),Bash(gh api repos/${{ github.repository }}/commits/${{ env.HEAD }}/comments:*)"
+            --allowedTools "Bash(git diff:*),Bash(gh pr comment:*)"
