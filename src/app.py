@@ -17,11 +17,12 @@ CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
+# Using hmac here prevents timing attacks, not fully necessary, but just good practice to use
 BEARER_TOKEN = os.getenv('BEARER_TOKEN')
 if not BEARER_TOKEN:
-    raise ValueError("BEARER_TOKEN environment variable is not set. Please set it in your .env file.")
+    raise ValueError("BEARER_TOKEN environment variable is not set. Please set it in the .env file.")
 
-EXPECTED_AUTH = f"Bearer {os.getenv('BEARER_TOKEN')}".encode()
+EXPECTED_AUTH = f"Bearer {BEARER_TOKEN}".encode() # Encode to raw bytes for hmac digest comparision
 
 @app.before_request
 def check_auth():
@@ -30,6 +31,7 @@ def check_auth():
 
     provided_auth = request.headers.get('Authorization', '').encode()
     
+    # compare digest gives you constant time comparison, and either requires ASCII or bytes, hence why we have to use .encode
     if not hmac.compare_digest(provided_auth, EXPECTED_AUTH):
         return {"error": "Unauthorized"}, 401
 
