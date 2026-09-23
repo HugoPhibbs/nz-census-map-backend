@@ -1,7 +1,5 @@
-name: Claude Review
+name: Claude PR Review
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize]
