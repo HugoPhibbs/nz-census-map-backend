@@ -28,20 +28,19 @@ def deploy_bucket():
     if  subprocess.run(bucket_exists_cmd, capture_output=True, shell=True).returncode == 0:
         print(
             f"Bucket {bucket_name} already exists. Skipping creation.")
-        return
+    else:   
+        create_bucket_cmd = ["gcloud", "storage", "buckets",
+                            "create", f"gs://{bucket_name}", f"--location={os.getenv('GCP_REGION')}"]
+        subprocess.run(create_bucket_cmd, check=True, shell=True)
 
-    create_bucket_cmd = ["gcloud", "storage", "buckets",
-                         "create", f"gs://{bucket_name}", f"--location={os.getenv('GCP_REGION')}"]
-    subprocess.run(create_bucket_cmd, check=True, shell=True)
-
-    subprocess.run(["gcloud", "storage", "buckets", "add-iam-policy-binding", bucket_name,
+    subprocess.run(["gcloud", "storage", "buckets", "add-iam-policy-binding", f"gs://{bucket_name}",
                     "--member=allUsers", "--role=roles/storage.legacyObjectReader"],
                    check=True, shell=True)
 
 def create_service_account():
     sa_exists_cmd = ["gcloud", "iam", "service-accounts", "describe",
                      f"{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com"]
-    if subprocess.run(sa_exists_cmd, capture_output=True, shell=True, check=True).returncode == 0:
+    if subprocess.run(sa_exists_cmd, capture_output=True, shell=True).returncode == 0:
         print(
             f"Service account {os.getenv('API_SA_NAME')} already exists. Skipping creation.")
         return
