@@ -131,10 +131,7 @@ if __name__ == "__main__":
         create_service_account()
 
     if args.deploy_cloud_run or args.all:
-        deploy_api_to_cloud_run()
-
-    if args.deploy_mcp or args.all:
-        deploy_mcp_to_cloud_run()
+        deploy_cloud_run()
 
     if args.fill_bucket or args.all:
         fill_bucket_with_data()
