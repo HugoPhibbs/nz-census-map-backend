@@ -16,10 +16,12 @@
         },
         {
             "type": "shell",
-            "label": "deploy-api",
+            "label": "deploy-backend",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "deploy.py"
+                "deploy.py",
+                "--deploy-mcp",
+                "--deploy-api"
             ],
             "problemMatcher": []
         },
