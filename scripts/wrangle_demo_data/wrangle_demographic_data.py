@@ -2,6 +2,11 @@ from dataclasses import asdict
 
 import pandas as pd
 from variables_meta import VARIABLES, VARIABLES_PERCENTAGE, AGGREGATE_GROUPS
+import anthropic
+from dotenv import load_dotenv
+
+load_dotenv() # For Anthropic API key
+ai_client = anthropic.Anthropic()
 
 def load_and_clean_df(path, area_id_col="CEN23_TBT_GEO_006"):
     demo_df = pd.read_csv(path, low_memory=False)
@@ -90,6 +95,44 @@ def rename_variables(demo_df):
     
     return demo_df
 
+def add_variable_descriptions(var_df):
+    descriptions = []
+    
+    def gennerate_description(row):
+        response = ai_client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            system="""
+                You're given database row from a census variable data base. 
+                
+                Each row has three keys, values: variable_id, variable_unit and plain_name. 
+                
+                Your task is to generate a short, clear, and concise description of the variable.
+                
+                Respond with this description and nothing else. Unless you are stumped, then return NONE
+                
+                E.g. "variable_id: pop_resident_usual, variable_unit: COUNT, plain_name: Usually Resident Population" => "The total number of people who usually live in the area, according to the census."
+                
+                IMPORTANT: Handling health-related variables:
+                e.g. id="perc_difficulty_hearing", this is percentage of people who have any trouble at all with hearing, so include this in the description. For example, "Percentage of people who have any difficulty hearing".
+            """,
+            messages=[{"role": "user", "content": str(row)}]
+        )
+        
+        return response.content[0].text
+    
+    for row in var_df.itertuples(index=False):
+        row_dict = row._asdict()
+        description = gennerate_description(row_dict)
+        
+        if description == "NONE":
+            raise ValueError(f"AI could not generate a description for variable_id: {row_dict['variable_id']}")
+        descriptions.append(description)
+        
+    var_df["description"] = descriptions
+    return var_df
+        
+
 def create_and_save_variables_table():
     base_vars_rows = [asdict(v) for v in VARIABLES]
     base_vars_rows = [row for row in base_vars_rows if row["keep"] == True]
@@ -111,6 +154,9 @@ def create_and_save_variables_table():
         del row["base_variable_id"]
     
     vars_df = pd.DataFrame(base_vars_rows + perc_rows + aggregate_groups_rows)
+    
+    vars_df = add_variable_descriptions(vars_df)
+    
     vars_df.to_csv("data/db-tables/csv-debug/demographic_variables_table.csv", index=False)
     vars_df.to_parquet("data/db-tables/demographic_variables_table.parquet", index=False)
     
@@ -140,19 +186,19 @@ def save_demo_df(demo_df):
     demo_df.to_parquet("data/db-tables/demographic_data_table.parquet", index=False)
 
 if __name__ == "__main__":    
-    demo_df = load_and_clean_df("data/web-download/demographic_data_download.csv")
-    demo_s1_df = load_and_clean_df("data/web-download/demographic_data_download_sa1.csv", area_id_col="CEN23_TBT_GEO_002")
+    # demo_df = load_and_clean_df("data/web-download/demographic_data_download.csv")
+    # demo_s1_df = load_and_clean_df("data/web-download/demographic_data_download_sa1.csv", area_id_col="CEN23_TBT_GEO_002")
     
-    demo_df = pd.concat([demo_df, demo_s1_df], ignore_index=True)
+    # demo_df = pd.concat([demo_df, demo_s1_df], ignore_index=True)
     
-    demo_df = remove_non_area_rows(demo_df)
-    demo_df = rename_variables(demo_df)
+    # demo_df = remove_non_area_rows(demo_df)
+    # demo_df = rename_variables(demo_df)
     
-    demo_df = aggregate_health_data(demo_df)
-    demo_df = add_perc_data(demo_df)
-    demo_df = drop_intermediary_rows(demo_df)
+    # demo_df = aggregate_health_data(demo_df)
+    # demo_df = add_perc_data(demo_df)
+    # demo_df = drop_intermediary_rows(demo_df)
     
-    demo_df["variable_value"] = demo_df["variable_value"].round(2)
+    # demo_df["variable_value"] = demo_df["variable_value"].round(2)
     
     create_and_save_variables_table()
-    save_demo_df(demo_df)
+    # save_demo_df(demo_df)

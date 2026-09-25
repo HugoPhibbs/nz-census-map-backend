@@ -22,11 +22,11 @@ def fill_variables_table(pool):
             for row in all_variable_ids.itertuples(index=False):
                 cur.execute(
                     """
-                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_id, variable_unit, plain_name)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_id, variable_unit, plain_name, description)
+                    VALUES (%s, %s, %s, %s)
                     ON CONFLICT DO NOTHING
                     """,
-                    (row.variable_id, row.variable_unit, row.plain_name)
+                    (row.variable_id, row.variable_unit, row.plain_name, row.description)
                 )
 
 def fill_areas_table(pool):
@@ -76,7 +76,7 @@ def fill_demographic_data_table(pool):
 
         conn.commit()
     
-def fill_tables(pool=get_db_connection_pool()):
+def fill_tables(pool):
     fill_variables_table(pool)
     fill_areas_table(pool)
     fill_demographic_data_table(pool)
@@ -88,7 +88,6 @@ def create_tables_prod():
             with open("./scripts/db/create_tables.sql", "r") as f:
                 cur.execute(f.read())
         conn.commit()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Set up the database using Docker Compose.")
@@ -115,4 +114,3 @@ if __name__ == "__main__":
         fill_tables(get_db_connection_pool(use_dev=False))
     else:
         print("No action specified. Use --start, --stop, --fill, or --reset-vols.")
-        
