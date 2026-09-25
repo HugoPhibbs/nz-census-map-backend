@@ -90,7 +90,7 @@ def get_variable_ids_to_name():
 @app.route("/stats/variable/ids")
 @cache.cached()
 def get_all_variables():
-    result = query_engine.get_all_variable_ids()
+    result = query_engine.all_variable_ids()
     return result, 200
 
 

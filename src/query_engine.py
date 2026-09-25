@@ -67,7 +67,7 @@ def all_variable_ids():
     with get_db_connection_pool().connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT variable_id FROM demographic_variables")
         result = cur.fetchall()
-        return [row[0] for row in result], 200
+        return [row[0] for row in result]
 
 
 def all_variable_stats(
