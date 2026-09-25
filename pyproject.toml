@@ -27,3 +27,6 @@ dev = [
     "pandas>=3.0.6",
     "waitress>=3.0.2",
 ]
+
+[tool.ruff.lint]
+extend-ignore = ["SIM117"]
