@@ -1,0 +1,159 @@
+openapi: 3.1.0
+info:
+  title: NZ Census Map API
+  description: Backend HTTP API for the NZ Census Map project
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:5000
+  - url: https://nz-census-map-api-551034620508.europe-west2.run.app
+
+security:
+  - bearerAuth: []
+
+paths:
+  /area:
+    get:
+      summary: Get info for an area
+      parameters:
+        - $ref: "#/components/parameters/CensusYearQuery"
+        - $ref: "#/components/parameters/AreaCode"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /stats/area:
+    get:
+      summary: Get all statistics for an area
+      parameters:
+        - $ref: "#/components/parameters/CensusYearQuery"
+        - $ref: "#/components/parameters/AreaCode"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /stats/variable/avgs:
+    get:
+      summary: Get the average of every variable for a census year
+      parameters:
+        - name: census_year
+          in: query
+          schema:
+            type: integer
+            default: 2023
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /stats/variable/ids:
+    get:
+      summary: List all variable IDs
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /stats/variable/ids/to-unit:
+    get:
+      summary: Map variable IDs to their units
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /stats/variable/ids/to-name:
+    get:
+      summary: Map variable IDs to their names
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /stats/variable/{variable_id}/{census_year}:
+    get:
+      summary: Get a variable's value for every area
+      parameters:
+        - name: variable_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: census_year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: area_type
+          in: query
+          schema:
+            type: string
+        - name: drop_pop_data
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    CensusYearQuery:
+      name: census_year
+      in: query
+      required: true
+      schema:
+        type: integer
+    AreaCode:
+      name: area_code
+      in: query
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  responses:
+    Ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

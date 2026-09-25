@@ -1,18 +1,36 @@
+import hmac
+import os
 from typing import Literal, TypedDict
 
 from mcp.server import MCPServer
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from src import query_engine
 
 mcp = MCPServer("NZ Census Map Server")
 
+EXPECTED_AUTH = f"Bearer {os.getenv('MCP_BEARER_TOKEN')}".encode()
+
+
+async def check_auth(request, call_next):
+    provided_auth = request.headers.get("authorization", "").encode()
+
+    if not hmac.compare_digest(provided_auth, EXPECTED_AUTH):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    return await call_next(request)
+
+
+app = mcp.streamable_http_app(stateless_http=True)
+app.add_middleware(BaseHTTPMiddleware, dispatch=check_auth)
 
 AREA_TYPE = Literal["SA1", "SA2", "SA3", "TA"]
 
 
 class Area(TypedDict):
     area_code: str
-    area_name: str | None # SA1 areas have no name
+    area_name: str | None  # SA1 areas have no name
     area_type: AREA_TYPE
     census_year: int
 
@@ -35,7 +53,7 @@ class DemographicVariable(TypedDict):
 def get_area_info(area_code: str, census_year: int = 2023) -> Area:
     """
     Get information about a specific area for a given census year.
-    
+
     Please note, for areas that are "SA1", there are no names (they are only numbered).
     So don't bother trying to get their names. If an area_name is None/null assume it is an SA1 area.
     """
@@ -130,4 +148,6 @@ def get_all_variable_stats(
 
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http", stateless_http=True)
+    import uvicorn
+
+    uvicorn.run(app, port=8000)

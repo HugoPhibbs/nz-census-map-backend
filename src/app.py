@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 from flask import Flask, request
 from flask_caching import Cache
 from flask_cors import CORS
-from psycopg.rows import dict_row
-from pypika import Query, Table
 
 from src import query_engine
 
