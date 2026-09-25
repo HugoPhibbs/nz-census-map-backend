@@ -8,7 +8,8 @@ from flask_cors import CORS
 from psycopg.rows import dict_row
 from pypika import Query, Table
 
-from src.utils import get_db_connection_pool
+import src.query_engine as query_engine
+
 
 load_dotenv()
 
@@ -38,33 +39,26 @@ def check_auth():
 def get_area_info():
     census_year = request.args.get('census_year')
     area_code = request.args.get('area_code')
-
-    with get_db_connection_pool().connection() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                "SELECT * FROM areas WHERE census_year = %s AND area_code = %s",
-                (census_year, area_code)
-            )
-            result = cur.fetchone()
-            if result is None:
-                return {"error": "Area not found"}, 404
-            return result, 200
+    result = query_engine.area_info(census_year, area_code)
+    
+    if not result:
+        return {"error": "Area not found"}, 404
+        
+    return result, 200
 
 
 @app.route("/stats/area")
 @cache.cached(query_string=True)
-def get_region_stats():
+def get_area_stats():
     census_year = request.args.get('census_year')
     area_code = request.args.get('area_code')
+    
+    result = query_engine.area_stats(census_year, area_code)
+    
+    if not result:
+        return {"error": "No statistics found for the specified area and census year"}, 404
 
-    with get_db_connection_pool().connection() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                "SELECT * FROM demographic_data WHERE census_year = %s AND area_code = %s",
-                (census_year, area_code)
-            )
-            result = cur.fetchall()
-            return result, 200
+    return result, 200
 
 
 @app.route("/stats/variable/avgs")
@@ -72,14 +66,8 @@ def get_region_stats():
 def get_variable_avgs():
     census_year = request.args.get('census_year', 2023)
     
-    with get_db_connection_pool().connection() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(
-                "SELECT variable_id, national_avg FROM NATIONAL_PERCENTAGE_AVERAGES WHERE census_year = %s",
-                (census_year,)
-            )
-            result = cur.fetchall()
-            return {row["variable_id"]: row["national_avg"] for row in result}, 200
+    result = query_engine.variable_averages(census_year)
+    return result, 200  
 
 
 @app.route("/stats/variable/ids/to-unit")
