@@ -10,7 +10,11 @@ from src import query_engine
 
 mcp = MCPServer("NZ Census Map Server")
 
-EXPECTED_AUTH = f"Bearer {os.getenv('MCP_BEARER_TOKEN')}".encode()
+EXPECTED_TOKEN = os.getenv("MCP_BEARER_TOKEN")
+if not EXPECTED_TOKEN:
+    raise ValueError("MCP_BEARER_TOKEN environment variable is not set")
+
+EXPECTED_AUTH = f"Bearer {EXPECTED_TOKEN}".encode()
 
 
 async def check_auth(request, call_next):
@@ -22,7 +26,9 @@ async def check_auth(request, call_next):
     return await call_next(request)
 
 
-app = mcp.streamable_http_app(stateless_http=True)
+# Adding 0.0.0.0 allows the MCP server to be accessed from outside the container
+# I.e. it turns on listening to all outside interfaces (default is only localhost)
+app = mcp.streamable_http_app(stateless_http=True, host="0.0.0.0")
 app.add_middleware(BaseHTTPMiddleware, dispatch=check_auth)
 
 AREA_TYPE = Literal["SA1", "SA2", "SA3", "TA"]
