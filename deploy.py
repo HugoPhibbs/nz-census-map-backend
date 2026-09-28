@@ -109,7 +109,7 @@ def build_cloud_run_image():
     image_name = (f"{region}-docker.pkg.dev/"
                   f"{os.getenv('PROJECT_ID')}/{repository_name}/backend:latest")
 
-    build_cmd = ["gcloud", "builds", "submit", "--tag", image_name]
+    build_cmd = ["gcloud", "builds", "submit", "--suppress-logs", "--tag", image_name]
     subprocess.run(build_cmd, check=True)
 
     return image_name
