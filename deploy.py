@@ -93,29 +93,29 @@ def fill_bucket_with_data():
         subprocess.run(upload_cmd, check=True, shell=True)
 
 
-def build_cloud_run_image():
-    region = os.getenv('GCP_REGION')
-    repository_name = "nz-census-map"
+# def build_cloud_run_image():
+#     region = os.getenv('GCP_REGION')
+#     repository_name = "nz-census-map"
     
-    describe_repo_cmd = ["gcloud", "artifacts", "repositories", "describe",
-                    repository_name, "--location", region]
+#     describe_repo_cmd = ["gcloud", "artifacts", "repositories", "describe",
+#                     repository_name, "--location", region]
     
-    if subprocess.run(describe_repo_cmd, capture_output=True).returncode != 0:
-        create_cmd = ["gcloud", "artifacts", "repositories", "create",
-                      repository_name, "--repository-format=docker", "--location", region]
-        subprocess.run(create_cmd, check=True)
+#     if subprocess.run(describe_repo_cmd, capture_output=True).returncode != 0:
+#         create_cmd = ["gcloud", "artifacts", "repositories", "create",
+#                       repository_name, "--repository-format=docker", "--location", region]
+#         subprocess.run(create_cmd, check=True)
     
     
-    image_name = (f"{region}-docker.pkg.dev/"
-                  f"{os.getenv('PROJECT_ID')}/{repository_name}/backend:latest")
+#     image_name = (f"{region}-docker.pkg.dev/"
+#                   f"{os.getenv('PROJECT_ID')}/{repository_name}/backend:latest")
 
-    build_cmd = ["gcloud", "builds", "submit", "--tag", image_name]
-    subprocess.run(build_cmd, check=True)
+#     build_cmd = ["gcloud", "builds", "submit", "--tag", image_name]
+#     subprocess.run(build_cmd, check=True)
 
-    return image_name
+#     return image_name
 
 
-def deploy_cloud_run(service_name, image_name):
+def deploy_cloud_run(service_name):
     service = CLOUD_RUN_SERVICES[service_name]
 
     env_str = ",".join(f"{k}={os.getenv(k)}" for k in service["env"])
@@ -123,7 +123,7 @@ def deploy_cloud_run(service_name, image_name):
     deploy_cmd = [
         "gcloud", "run", "deploy", service["name"],
         "--verbosity=debug",
-        "--image", image_name,
+        "--source .",
         "--region", os.getenv("GCP_REGION"),
         "--cpu-boost",
         "--min-instances=1",
@@ -168,17 +168,11 @@ if __name__ == "__main__":
     if args.create_service_account or args.all:
         create_service_account()
 
-    deploy_api = args.deploy_api or args.all
-    deploy_mcp = args.deploy_mcp or args.all
+    if args.deploy_api or args.all:
+        deploy_cloud_run("api")
 
-    if deploy_api or deploy_mcp:
-        image_name = build_cloud_run_image()
-
-        if deploy_api:
-            deploy_cloud_run("api", image_name)
-
-        if deploy_mcp:
-            deploy_cloud_run("mcp", image_name)
+    if args.deploy_mcp or args.all:
+        deploy_cloud_run("mcp")
 
     if args.fill_bucket or args.all:
         fill_bucket_with_data()
