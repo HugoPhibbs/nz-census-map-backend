@@ -100,17 +100,17 @@ def build_cloud_run_image():
     describe_repo_cmd = ["gcloud", "artifacts", "repositories", "describe",
                     repository_name, "--location", region]
     
-    if subprocess.run(describe_repo_cmd, shell=True, capture_output=True).returncode != 0:
+    if subprocess.run(describe_repo_cmd, capture_output=True).returncode != 0:
         create_cmd = ["gcloud", "artifacts", "repositories", "create",
                       repository_name, "--repository-format=docker", "--location", region]
-        subprocess.run(create_cmd, check=True, shell=True)
+        subprocess.run(create_cmd, check=True)
     
     
     image_name = (f"{region}-docker.pkg.dev/"
                   f"{os.getenv('PROJECT_ID')}/{repository_name}/backend:latest")
 
     build_cmd = ["gcloud", "builds", "submit", "--tag", image_name]
-    subprocess.run(build_cmd, check=True, shell=True)
+    subprocess.run(build_cmd, check=True)
 
     return image_name
 
