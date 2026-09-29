@@ -70,20 +70,40 @@ def all_variable_ids():
         return [row[0] for row in result]
 
 
+def variable_values_for_area(
+    area_code: str, census_year: int, variable_ids_to_keep: list[str] | None = None
+):
+    t = Table("demographic_data")
+    q = (
+        Query.from_(t)
+        .select(t.variable_id, t.variable_value)
+        .where((t.area_code == area_code) & (t.census_year == census_year))
+    )
+
+    if variable_ids_to_keep is not None:
+        q = q.where(t.variable_id.isin(variable_ids_to_keep))
+
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(q.get_sql())
+            result = cur.fetchall()
+            return {r["variable_id"]: r["variable_value"] for r in result}
+
+
 def all_variable_stats(
-    variable_id, 
-    census_year=2023, 
-    area_type=None, 
+    variable_id,
+    census_year=2023,
+    area_type=None,
     drop_pop_data: bool = False,
     sort_order: Literal["asc", "desc"] | None = None,
     top_k: int | None = None,
 ):
     """
     Get all statistics for a specific demographic variable for a given census year.
-    
+
     If top_k is provided, but sort_order is not, the top_k results will be returned only.
     """
-    
+
     demographic_data = Table("demographic_data")
 
     q = (
@@ -108,7 +128,7 @@ def all_variable_stats(
 
     if drop_pop_data:
         q = q.where(~demographic_data.variable_id.like("pop_%"))
-        
+
     if top_k is not None and sort_order is None:
         sort_order = "desc"
 
