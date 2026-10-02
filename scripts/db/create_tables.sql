@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_DATA(
     FOREIGN KEY (variable_id) REFERENCES DEMOGRAPHIC_VARIABLES(variable_id) ON DELETE RESTRICT
 );
 
+# This gives an index for fetching variable data for the frontend UI
+CREATE INDEX IF NOT EXISTS idx_demographic_var_year
+ON demographic_data (variable_id, census_year) INCLUDE (area_code, variable_value);
+
 CREATE MATERIALIZED VIEW NATIONAL_PERCENTAGE_AVERAGES AS
                 SELECT pct.variable_id, pct.census_year,
                     ROUND(SUM(pct.variable_value * pop.variable_value) / SUM(pop.variable_value), 2) AS national_avg
