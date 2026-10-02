@@ -27,11 +27,6 @@ class IntOrFloatNumericBinaryLoader(NumericBinaryLoader):
     def load(self, data):
         return normalize_numeric(super().load(data))
 
-def timed_check(conn):
-    start = time.perf_counter()
-    psycopg_pool.ConnectionPool.check_connection(conn)
-    print(f"Pool check took {(time.perf_counter() - start) * 1000:.2f} ms")
-
 @functools.lru_cache(maxsize=1)
 def get_db_connection_pool(use_dev=None):
     psycopg.adapters.register_loader("numeric", IntOrFloatNumericLoader)
@@ -49,5 +44,5 @@ def get_db_connection_pool(use_dev=None):
         conninfo=conn_info,
         min_size=1,
         max_size=10,
-        check=timed_check,
+        check= psycopg_pool.ConnectionPool.check_connection,
     )
