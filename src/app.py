@@ -1,4 +1,3 @@
-import hmac
 import os
 
 from dotenv import load_dotenv
@@ -14,26 +13,6 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
-
-BEARER_TOKEN = os.getenv("BEARER_TOKEN")
-if not BEARER_TOKEN:
-    raise ValueError(
-        "BEARER_TOKEN environment variable is not set. Please set it in your .env file."
-    )
-
-EXPECTED_AUTH = f"Bearer {os.getenv('BEARER_TOKEN')}".encode()
-
-
-@app.before_request
-def check_auth():
-    if request.method == "OPTIONS":
-        return
-
-    provided_auth = request.headers.get("Authorization", "").encode()
-
-    if not hmac.compare_digest(provided_auth, EXPECTED_AUTH):
-        return {"error": "Unauthorized"}, 401
-
 
 @app.route("/area")
 @cache.cached(query_string=True)

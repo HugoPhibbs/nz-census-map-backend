@@ -27,7 +27,6 @@ jobs:
         env:
           DB_CONNECTION_STRING_PROD: ${{ secrets.DB_CONNECTION_STRING_PROD }}
           STATS_NZ_API_KEY: ${{ secrets.STATS_NZ_API_KEY }}
-          BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
           BUCKET_NAME: ${{ vars.BUCKET_NAME }}
           FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
           GCP_REGION: ${{ vars.GCP_REGION }}

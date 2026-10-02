@@ -8,9 +8,6 @@ servers:
   - url: http://localhost:5000
   - url: https://nz-census-map-api-551034620508.europe-west2.run.app
 
-security:
-  - bearerAuth: []
-
 paths:
   /area:
     get:
@@ -21,8 +18,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -35,8 +30,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -52,8 +45,7 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+
 
   /stats/variable/ids:
     get:
@@ -61,8 +53,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /stats/variable/ids/to-unit:
     get:
@@ -70,8 +60,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /stats/variable/ids/to-name:
     get:
@@ -79,8 +67,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /stats/variable/{variable_id}/{census_year}:
     get:
@@ -108,14 +94,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
 
   parameters:
     CensusYearQuery:
@@ -145,12 +125,6 @@ components:
         application/json:
           schema:
             type: object
-    Unauthorized:
-      description: Missing or invalid bearer token
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
     NotFound:
       description: Not found
       content:
