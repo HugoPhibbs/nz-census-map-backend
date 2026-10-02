@@ -39,10 +39,11 @@ def area_stats(census_year: int, area_code: str):
 
 
 def variable_ids_to_unit():
-    with get_db_connection_pool().connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT variable_id, variable_unit FROM demographic_variables")
-        result = cur.fetchall()
-        return {row[0]: row[1] for row in result}
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT variable_id, variable_unit FROM demographic_variables")
+            result = cur.fetchall()
+            return {row[0]: row[1] for row in result}
 
 
 def variable_averages(census_year: int):
