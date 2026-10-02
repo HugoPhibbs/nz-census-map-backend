@@ -11,7 +11,7 @@ CLOUD_RUN_SERVICES = {
         "name": "nz-census-map-api",
         "command": "gunicorn",
         "args": ["-b", "0.0.0.0:8080", "src.app:app"],
-        "env": ["DB_CONNECTION_STRING_PROD", "STATS_NZ_API_KEY", "BEARER_TOKEN",
+        "env": ["DB_CONNECTION_STRING_PROD", "STATS_NZ_API_KEY",
                 "BUCKET_NAME", "FRONTEND_DOMAIN"]
     },
     "mcp": {

@@ -27,7 +27,7 @@ python deploy.py
 ## Using the API
 
 * The URL of the API is _non-stable_, it changes depending on deployments. 
-* The OpenAPI specification can be found in [openapi.yaml](./docs/openapi.yaml). Note that you will need to use bearer token auth; set the `Authorisation` header to `Bearer: <provided_token>`.
+* The OpenAPI specification can be found in [openapi.yaml](./docs/openapi.yaml).
 
 ## System Architecture
 
