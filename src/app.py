@@ -95,17 +95,12 @@ def get_all_variables():
 
 
 @app.route("/stats/variable/<variable_id>/<census_year>")
-@cache.cached(query_string=True)
+# @cache.cached(query_string=True)
 def get_all_variable_stats(variable_id, census_year):
 
-    result = query_engine.all_variable_stats(
-        variable_id,
-        census_year,
-        request.args.get("area_type")
-    )
+    result = query_engine.map_stats(variable_id, census_year)
 
     return result, 200
-
 
 if __name__ == "__main__":
     print("Running a production server at http://localhost:5000")

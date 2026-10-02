@@ -147,3 +147,13 @@ def all_variable_stats(
             res = cur.fetchall()
             print(f"Query took {(time.perf_counter() - start) * 1000:.2f} ms")
             return res
+
+def map_stats(variable_id, census_year=2023):
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            # Casting to float8 here allows for faster serialiation to JSON without going thru Python's Decimal type.
+            cur.execute(
+                "SELECT area_code, variable_value::float8 FROM demographic_data WHERE variable_id = %s AND census_year = %s",
+                (variable_id, census_year),
+            )
+            return cur.fetchall()
