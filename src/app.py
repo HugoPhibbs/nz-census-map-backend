@@ -95,7 +95,7 @@ def get_all_variables():
 
 
 @app.route("/stats/variable/<variable_id>/<census_year>")
-# @cache.cached(query_string=True)
+@cache.cached(query_string=True)
 def get_all_variable_stats(variable_id, census_year):
 
     result = query_engine.map_stats(variable_id, census_year)
