@@ -18,8 +18,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -32,8 +30,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -49,8 +45,7 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+
 
   /stats/variable/ids:
     get:
@@ -58,8 +53,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /stats/variable/ids/to-unit:
     get:
@@ -67,8 +60,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /stats/variable/ids/to-name:
     get:
@@ -76,8 +67,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
   /stats/variable/{variable_id}/{census_year}:
     get:
@@ -105,8 +94,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
 
 components:
 
