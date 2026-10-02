@@ -161,7 +161,6 @@ def get_all_variable_stats(
     variable_id: str,
     census_year: int = 2023,
     area_type: AREA_TYPE | None = None,
-    drop_pop_data: bool = False,
     sort_order: Literal["asc", "desc"] | None = None,
     top_k: int | None = None,
 ) -> list[DemographicData]:
@@ -172,7 +171,6 @@ def get_all_variable_stats(
     - variable_id (str): The ID of the demographic variable.
     - census_year (int): The census year to query. Default is 2023.
     - area_type (AREA_TYPE | None): Optional. Filter areas by type (e.g., "SA1", "SA2", "SA3", "TA"). If None, all area types are included. Default is None.
-    - drop_pop_data (bool): Optional. If True, population data will be excluded from the results. Default is False.
     - sort_order ("asc" | "desc" | None): Optional. Sort results by value. Areas with no value are excluded when sorting. If None, results are unsorted. Default is None.
     - top_k (int | None): Optional. Return only the first k results. If set without sort_order, results are sorted descending (highest values first). Default is None.
 
@@ -197,7 +195,7 @@ def get_all_variable_stats(
     ]
     """
     return query_engine.all_variable_stats(
-        variable_id, census_year, area_type, drop_pop_data, sort_order, top_k
+        variable_id, census_year, area_type, sort_order, top_k
     )
 
 

@@ -1,4 +1,5 @@
 from typing import Literal
+import time
 
 from psycopg.rows import dict_row
 from pypika import Order, Query, Table
@@ -95,7 +96,6 @@ def all_variable_stats(
     variable_id,
     census_year=2023,
     area_type=None,
-    drop_pop_data: bool = False,
     sort_order: Literal["asc", "desc"] | None = None,
     top_k: int | None = None,
 ):
@@ -104,12 +104,14 @@ def all_variable_stats(
 
     If top_k is provided, but sort_order is not, the top_k results will be returned only.
     """
+    
+    start = time.perf_counter()
 
     demographic_data = Table("demographic_data")
 
     q = (
         Query.from_(demographic_data)
-        .select("*")
+        .select("variable_value", "area_code")
         .where(
             (demographic_data.variable_id == variable_id)
             & (demographic_data.census_year == census_year)
@@ -127,9 +129,6 @@ def all_variable_stats(
             .where(areas.area_type == area_type)
         )
 
-    if drop_pop_data:
-        q = q.where(~demographic_data.variable_id.like("pop_%"))
-
     if top_k is not None and sort_order is None:
         sort_order = "desc"
 
@@ -145,4 +144,6 @@ def all_variable_stats(
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(q.get_sql())
-            return cur.fetchall()
+            res = cur.fetchall()
+            print(f"Query took {(time.perf_counter() - start) * 1000:.2f} ms")
+            return res

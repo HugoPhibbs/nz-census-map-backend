@@ -97,13 +97,11 @@ def get_all_variables():
 @app.route("/stats/variable/<variable_id>/<census_year>")
 @cache.cached(query_string=True)
 def get_all_variable_stats(variable_id, census_year):
-    drop_pop_data = request.args.get("drop_pop_data", "false").lower() == "true"
 
     result = query_engine.all_variable_stats(
         variable_id,
         census_year,
-        request.args.get("area_type"),
-        drop_pop_data=drop_pop_data,
+        request.args.get("area_type")
     )
 
     return result, 200
