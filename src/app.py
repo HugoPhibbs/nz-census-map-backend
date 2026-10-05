@@ -21,9 +21,9 @@ cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT":
 def health_check():
     healthy = True
     try:
-        start = time.perf_counter()
         with get_db_connection_pool().connection() as conn:
             with conn.cursor() as cur:
+                start = time.perf_counter()
                 cur.execute("SELECT 1")
                 result = cur.fetchone()
                 db_ping_time = round((time.perf_counter() - start) * 1000, 2)
