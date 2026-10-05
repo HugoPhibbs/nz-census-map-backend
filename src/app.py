@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, request
 from flask_caching import Cache
 from flask_cors import CORS
+from flask_compress import Compress
 import psycopg
 
 from src import query_engine
@@ -14,6 +15,9 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
+
+app.config["COMPRESS_MIN_SIZE"] = 450
+compress = Compress(app)
 
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
 
@@ -97,7 +101,7 @@ def get_all_variables():
 
 
 @app.route("/stats/variable/<variable_id>/<census_year>")
-@cache.cached(query_string=True)
+@cache.cached(query_string=True, response_hit_indication=True)
 def get_all_variable_stats(variable_id, census_year):
 
     result = query_engine.map_stats(variable_id, census_year)
