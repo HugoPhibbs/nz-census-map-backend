@@ -26,8 +26,8 @@ def health_check():
             with conn.cursor() as cur:
                 cur.execute("SELECT 1")
                 result = cur.fetchone()
-                db_ping_time = round(time.perf_counter() - start, 2) * 1000
-    except psycopg.Error as e:
+                db_ping_time = round((time.perf_counter() - start) * 1000, 2)
+    except Exception as e:
         print(f"Database connection error: {e}")
         healthy = False
             
