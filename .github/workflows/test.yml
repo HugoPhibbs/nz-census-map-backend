@@ -8,15 +8,15 @@ on:
 
 
 jobs:
-  docker-build-and-serve:
+  docker-api-build-and-serve:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
     
-      - name: Build
+      - name: API Build
         run: docker build -t api:latest .
 
-      - name: Serve (run container)
+      - name: API Serve (run container)
         env:
           DB_CONNECTION_STRING_PROD: ${{ secrets.DB_CONNECTION_STRING_PROD }}
           STATS_NZ_API_KEY: ${{ secrets.STATS_NZ_API_KEY }}
@@ -31,7 +31,7 @@ jobs:
           -e FRONTEND_DOMAIN -e GCP_REGION -e API_SA_NAME -e PROJECT_ID
           api:latest api
 
-      - name: Health Check
+      - name: API Health Check
         # Check health, retry up to 5 times with 2 second delay if connection refused
         run:
             curl --fail --retry 5 --retry-all-errors --retry-delay 2 http://localhost:8080/health
