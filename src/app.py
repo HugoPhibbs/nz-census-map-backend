@@ -1,11 +1,14 @@
 import os
+import time
 
 from dotenv import load_dotenv
 from flask import Flask, request
 from flask_caching import Cache
 from flask_cors import CORS
+import psycopg
 
 from src import query_engine
+from src.utils import get_db_connection_pool
 
 load_dotenv()
 
@@ -13,6 +16,26 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
+
+@app.route("/health")
+def health_check():
+    healthy = True
+    try:
+        start = time.perf_counter()
+        with get_db_connection_pool().connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                result = cur.fetchone()
+                db_ping_time = round(time.perf_counter() - start, 2) * 1000
+    except psycopg.Error as e:
+        print(f"Database connection error: {e}")
+        healthy = False
+            
+    if healthy and result and result[0] == 1:
+        return {"status": "ok", "db_ping_time_ms": db_ping_time}, 200
+    else:
+        return {"status": "broken"}, 503
+
 
 @app.route("/area")
 @cache.cached(query_string=True)
