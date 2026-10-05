@@ -1,0 +1,38 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+  docker-build-and-serve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+    
+      - name: Build
+        run: docker build -t api:latest .
+
+      - name: Serve (run container)
+        env:
+          DB_CONNECTION_STRING_PROD: ${{ secrets.DB_CONNECTION_STRING_PROD }}
+          STATS_NZ_API_KEY: ${{ secrets.STATS_NZ_API_KEY }}
+          BUCKET_NAME: ${{ vars.BUCKET_NAME }}
+          FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          API_SA_NAME: ${{ vars.API_SA_NAME }}
+          PROJECT_ID: ${{ vars.PROJECT_ID }}
+        run: >
+          docker run -d -p 8080:8080
+          -e DB_CONNECTION_STRING_PROD -e STATS_NZ_API_KEY -e BUCKET_NAME
+          -e FRONTEND_DOMAIN -e GCP_REGION -e API_SA_NAME -e PROJECT_ID
+          api:latest api
+
+      - name: Health Check
+        # Check health, retry up to 5 times with 2 second delay if connection refused
+        run:
+            curl --fail --retry 5 --retry-all-errors --retry-delay 2 http://localhost:8080/health
+    

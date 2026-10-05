@@ -9,15 +9,13 @@ load_dotenv()
 CLOUD_RUN_SERVICES = {
     "api": {
         "name": "nz-census-map-api",
-        "command": "gunicorn",
-        "args": ["-b", "0.0.0.0:8080", "src.app:app"],
+        "command": "api",
         "env": ["DB_CONNECTION_STRING_PROD", "STATS_NZ_API_KEY",
                 "BUCKET_NAME", "FRONTEND_DOMAIN"]
     },
     "mcp": {
         "name": "nz-census-map-mcp",
-        "command": "uvicorn",
-        "args": ["src.mcp_server:app", "--host", "0.0.0.0", "--port", "8080"],
+        "command": "mcp",
         "env": ["DB_CONNECTION_STRING_PROD", "MCP_BEARER_TOKEN"]
     },
 }
@@ -92,29 +90,6 @@ def fill_bucket_with_data():
             "gsutil", "cp", f"./data/pmtiles/{file}", f"gs://{os.getenv('BUCKET_NAME')}/{file}"]
         subprocess.run(upload_cmd, check=True, shell=True)
 
-
-# def build_cloud_run_image():
-#     region = os.getenv('GCP_REGION')
-#     repository_name = "nz-census-map"
-    
-#     describe_repo_cmd = ["gcloud", "artifacts", "repositories", "describe",
-#                     repository_name, "--location", region]
-    
-#     if subprocess.run(describe_repo_cmd, capture_output=True).returncode != 0:
-#         create_cmd = ["gcloud", "artifacts", "repositories", "create",
-#                       repository_name, "--repository-format=docker", "--location", region]
-#         subprocess.run(create_cmd, check=True)
-    
-    
-#     image_name = (f"{region}-docker.pkg.dev/"
-#                   f"{os.getenv('PROJECT_ID')}/{repository_name}/backend:latest")
-
-#     build_cmd = ["gcloud", "builds", "submit", "--tag", image_name]
-#     subprocess.run(build_cmd, check=True)
-
-#     return image_name
-
-
 def deploy_cloud_run(service_name):
     service = CLOUD_RUN_SERVICES[service_name]
 
@@ -129,8 +104,8 @@ def deploy_cloud_run(service_name):
         "--min-instances=1",
         "--allow-unauthenticated",
         "--service-account", f"{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
-        f"--command={service['command']}",
-        f"--args={','.join(service['args'])}",
+        '--command=""', # Leave empty to run entrypoint.sh
+        f"--args={service['command']}",
         f'--set-env-vars="{env_str}"',
     ]
 

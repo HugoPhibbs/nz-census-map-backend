@@ -1,5 +1,4 @@
 name: Google Cloud Run Deploy
-# Useful for GCP auth gates: https://docs.cloud.google.com/run/docs/reference/iam/roles
 
 on:
   push:
