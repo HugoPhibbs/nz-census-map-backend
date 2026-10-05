@@ -32,7 +32,7 @@ jobs:
           api:latest api
 
       - name: Health Check
-        # Check health, retry up to 10 times with 2 second delay if connection refused
+        # Check health, retry up to 5 times with 2 second delay if connection refused
         run:
-            curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:8080/health
+            curl --fail --retry 5 --retry-all-errors --retry-delay 2 http://localhost:8080/health
     
