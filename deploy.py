@@ -125,11 +125,17 @@ def deploy_firebase_for_api():
             }]
         }
     }
-    with open("deploy/firebase.json", "w") as f:
+    
+    filepath = "deploy/firebase.json"
+    
+    with open(filepath, "w") as f:
         json.dump(config, f, indent=2)
         
-    cmd = ["firebase", "deploy", "--only", "hosting",  "--project", os.getenv("PROJECT_ID"), "--config", "deploy/firebase.json"]
-    subprocess.run(cmd, check=True, shell=True)
+    try:    
+        cmd = ["firebase", "deploy", "--only", "hosting",  "--project", os.getenv("PROJECT_ID"), "--config", "deploy/firebase.json"]
+        subprocess.run(cmd, check=True, shell=True)
+    finally:
+        os.remove(filepath)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
