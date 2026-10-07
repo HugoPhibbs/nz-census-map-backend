@@ -35,14 +35,13 @@ AREA_TYPE = Literal["SA1", "SA2", "SA3", "TA"]
 
 
 class Area(TypedDict):
-    area_code: str
+    area_id: str
     area_name: str | None  # SA1 areas have no name
     area_type: AREA_TYPE
-    census_year: int
 
 
 class DemographicData(TypedDict):
-    area_code: str
+    area_id: str
     census_year: int
     variable_id: str
     variable_value: float
@@ -56,14 +55,14 @@ class DemographicVariable(TypedDict):
 
 
 @mcp.tool()
-def get_area_info(area_code: str, census_year: int = 2023) -> Area:
+def get_area_info(area_id: str) -> Area:
     """
-    Get information about a specific area for a given census year.
+    Get information about a specific area
 
     Please note, for areas that are "SA1", there are no names (they are only numbered).
     So don't bother trying to get their names. If an area_name is None/null assume it is an SA1 area.
     """
-    return query_engine.area_info(census_year, area_code)
+    return query_engine.area_info(area_id)
 
 @mcp.tool()
 def get_variable_avgs(census_year: int = 2023) -> dict[str, float]:
@@ -115,13 +114,13 @@ def get_variable_ids_to_name() -> dict[str, str]:
 
 @mcp.tool()
 def get_variable_values_for_area(
-    area_code: str, census_year: int = 2023, variables_ids_to_keep: str | list[str] | None = None
+    area_id: str, census_year: int = 2023, variables_ids_to_keep: str | list[str] | None = None
 ) -> float | None:
     """
     Get the value of a specific demographic variable for a specific area and census year.
 
     Parameters:
-    - area_code (str): The code of the area.
+    - area_id (str): The ID of the area.
     - census_year (int): The census year to query. Default is 2023.
     - variables_ids_to_keep (str | list[str]): Optional, leave empty for all variables OR specify a single variable ID (str) or a list of variable IDs (list[str]) to keep in the results.
 
@@ -134,7 +133,7 @@ def get_variable_values_for_area(
     """
     if isinstance(variables_ids_to_keep, str):
         variables_ids_to_keep = [variables_ids_to_keep]
-    return query_engine.variable_values_for_area(area_code, census_year, variables_ids_to_keep)
+    return query_engine.variable_values_for_area(area_id, census_year, variables_ids_to_keep)
 
 
 
@@ -180,13 +179,13 @@ def get_all_variable_stats(
     Example of the returned list:
     [
         {
-            "area_code": "001",
+            "area_id": "001",
             "census_year": 2023,
             "variable_id": "median_personal_income",
             "variable_value": 55000.0
         },
         {
-            "area_code": "002",
+            "area_id": "002",
             "census_year": 2023,
             "variable_id": "median_personal_income",
             "variable_value": 60000.0
