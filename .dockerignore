@@ -9,3 +9,4 @@ docs
 README.md
 *.pyc
 .md
+deploy
