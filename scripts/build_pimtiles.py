@@ -8,7 +8,7 @@ def fetch_basemap():
     subprocess.run(f'docker run --rm -v "{data_dir}:/data" protomaps/go-pmtiles extract https://build.protomaps.com/20260901.pmtiles /data/nz_basemap.pmtiles --bbox=165.673828,-47.338823,178.857422,-34.016242 --maxzoom=12', shell=True)
     subprocess.run(f'docker run --rm -v "{data_dir}:/data" protomaps/go-pmtiles extract https://build.protomaps.com/20260901.pmtiles /data/chatham_basemap.pmtiles --bbox=182.458497,-44.489317,184.315186,-43.501412 --maxzoom=12', shell=True)
     
-def merge_geojson_to_pmtiles():
+def build_sa1_sa2_sa3_pmtiles():
     data_dir = os.path.join(os.getcwd(), "data")
     subprocess.run(
         f'docker run --rm -v "{data_dir}:/data" -w /data ubuntu:24.04 bash -c '
@@ -16,9 +16,18 @@ def merge_geojson_to_pmtiles():
         'tippecanoe -f -o ./pmtiles/area_boundaries.pmtiles -z12 --no-tile-size-limit --no-feature-limit '
         '-L ta:./geojson/territorial-authority-2023-clipped-generalised-adjusted.json '
         '-L sa3:./geojson/statistical-area-3-2023-clipped-generalised-adjusted.json '
-        '-L sa2:./geojson/statistical-area-2-2023-clipped-generalised-adjusted.json ',
-        # '-L sa1:./geojson/statistical-area-1-2023-clipped-generalised-adjusted.json ',
-        # '-L coastline:./geojson/nz-coastlines-and-islands-polygons-topo-1250k.json"',
+        '-L sa2:./geojson/statistical-area-2-2023-clipped-generalised-adjusted.json"',
+        shell=True,
+    )
+
+def build_sa1_pmtiles():
+    # SA1 is kept in its own file, merging it with the other layers caused tiles to drop at random zoom levels
+    data_dir = os.path.join(os.getcwd(), "data")
+    subprocess.run(
+        f'docker run --rm -v "{data_dir}:/data" -w /data ubuntu:24.04 bash -c '
+        '"apt update && apt install -y tippecanoe && '
+        'tippecanoe -f -o ./pmtiles/sa1.pmtiles -z12 --no-tile-size-limit --no-feature-limit '
+        '-L sa1:./geojson/statistical-area-1-2023-clipped-generalised-adjusted.json"',
         shell=True,
     )
     
@@ -37,8 +46,8 @@ def merge_area_boundaries_with_basemap():
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build PMTiles for NZ Census Map")
-    parser.add_argument("--merge-geojson", "-mg", action="store_true", help="Build the boundary PMTiles")
-    parser.add_argument("--fetch-basemap", "-fb", action="store_true", help="Fetch the basemap PMTiles")
+    parser.add_argument("--build-boundary-pmtiles", "-bp", action="store_true", help="Build the boundary PMTiles")
+    parser.add_argument("--fetch-basemap-pmtiles", "-fb", action="store_true", help="Fetch the basemap PMTiles")
     parser.add_argument("--merge-pmtiles", "-mp", action="store_true", help="Merge boundary and basemap PMTiles")
     parser.add_argument("--all", "-a", action="store_true", help="Run all steps")
     
@@ -48,11 +57,12 @@ if __name__ == "__main__":
         parser.print_help()
         exit(1)
     
-    if args.merge_geojson or args.all:
-        merge_geojson_to_pmtiles()
-        print("merging geojson done")
+    if args.build_boundary_pmtiles or args.all:
+        build_sa1_sa2_sa3_pmtiles()
+        build_sa1_pmtiles()
+        print("building boundary pmtiles done")
     
-    if args.fetch_basemap or args.all:
+    if args.fetch_basemap_pmtiles or args.all:
         fetch_basemap()
         print("fetching basemap done")
     
