@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_DATA(
     FOREIGN KEY (variable_id) REFERENCES DEMOGRAPHIC_VARIABLES(variable_id) ON DELETE RESTRICT
 );
 
-# This gives an index for fetching variable data for the frontend UI
+-- This gives an index for fetching variable data for the frontend UI
 CREATE INDEX IF NOT EXISTS idx_demographic_var_year
 ON demographic_data (variable_id, census_year) INCLUDE (area_code, variable_value);
 
