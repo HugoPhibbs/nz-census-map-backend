@@ -76,6 +76,12 @@ def get_variable_avgs():
     census_year = request.args.get("census_year", 2023)
 
     result = query_engine.variable_averages(census_year)
+    
+    if result == []:
+        return {
+            "error": "No statistics found for the specified census year"
+        }, 404
+    
     return result, 200
 
 
@@ -105,6 +111,9 @@ def get_all_variables():
 def get_all_map_stats(variable_id, census_year):
 
     result = query_engine.map_stats(variable_id, census_year)
+    
+    if result == []:
+        return {"error": "No statistics found for the combination of the specified variable and census year"}, 404
 
     return result, 200
 
