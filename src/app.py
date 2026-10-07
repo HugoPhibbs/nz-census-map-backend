@@ -2,11 +2,10 @@ import os
 import time
 
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask
 from flask_caching import Cache
-from flask_cors import CORS
 from flask_compress import Compress
-import psycopg
+from flask_cors import CORS
 
 from src import query_engine
 from src.utils import get_db_connection_pool
@@ -41,12 +40,10 @@ def health_check():
         return {"status": "broken"}, 503
 
 
-@app.route("/area")
-@cache.cached(query_string=True)
-def get_area_info():
-    census_year = request.args.get("census_year")
-    area_code = request.args.get("area_code")
-    result = query_engine.area_info(census_year, area_code)
+@app.route("/area/<area_id>")
+@cache.cached()
+def get_area_info(area_id):
+    result = query_engine.area_info(area_id)
 
     if not result:
         return {"error": "Area not found"}, 404
@@ -54,13 +51,10 @@ def get_area_info():
     return result, 200
 
 
-@app.route("/stats/area")
-@cache.cached(query_string=True)
-def get_area_stats():
-    census_year = request.args.get("census_year")
-    area_code = request.args.get("area_code")
-
-    result = query_engine.area_stats(census_year, area_code)
+@app.route("/stats/area/<area_id>/<int:census_year>")
+@cache.cached()
+def get_area_stats(area_id, census_year):
+    result = query_engine.area_stats(census_year, area_id)
 
     if not result:
         return {
@@ -70,14 +64,13 @@ def get_area_stats():
     return result, 200
 
 
-@app.route("/stats/variable/avgs")
-@cache.cached(timeout=3600)
-def get_variable_avgs():
-    census_year = request.args.get("census_year", 2023)
 
+@app.route("/stats/variable/avgs/<int:census_year>")
+@cache.cached(timeout=3600)
+def get_variable_avgs(census_year):
     result = query_engine.variable_averages(census_year)
     
-    if result == []:
+    if result == {}:
         return {
             "error": "No statistics found for the specified census year"
         }, 404
@@ -106,10 +99,9 @@ def get_all_variables():
     return result, 200
 
 
-@app.route("/stats/variable/<variable_id>/<census_year>")
-@cache.cached(query_string=True, response_hit_indication=True)
+@app.route("/stats/variable/<variable_id>/<int:census_year>")
+@cache.cached(response_hit_indication=True)
 def get_all_map_stats(variable_id, census_year):
-
     result = query_engine.map_stats(variable_id, census_year)
     
     if result == []:
