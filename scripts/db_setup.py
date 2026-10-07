@@ -30,17 +30,17 @@ def fill_variables_table(pool):
                 )
 
 def fill_areas_table(pool):
-    df = pd.read_parquet("./data/db-tables/areas_table.parquet")  # Ensure area_code is read as string to preserve leading zeros
+    df = pd.read_parquet("./data/db-tables/areas_table.parquet")  # Ensure area_id is read as string to preserve leading zeros
     
     with pool.connection() as conn, conn.cursor() as cur:
         for area in df.itertuples(index=False):
             cur.execute(
                 """
-                    INSERT INTO AREAS (area_name, area_code, census_year, area_type)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO AREAS (area_name, area_id, area_type)
+                    VALUES (%s, %s, %s)
                     ON CONFLICT DO NOTHING
                     """,
-                (area.area_name, area.area_code, area.census_year, area.area_type)
+                (area.area_name, area.area_id, area.area_type)
             )
     
 
@@ -51,7 +51,7 @@ def fill_demographic_data_table(pool):
         with conn.cursor() as cur:
             cur.execute("""
                 CREATE TEMP TABLE demographic_data_staging (
-                    area_code TEXT,
+                    area_id TEXT,
                     census_year INT,
                     variable_id TEXT,
                     variable_value DOUBLE PRECISION
@@ -63,23 +63,30 @@ def fill_demographic_data_table(pool):
             buf.seek(0)
 
             with cur.copy(
-                "COPY demographic_data_staging (area_code, census_year, variable_id, variable_value) FROM STDIN WITH (FORMAT csv)"
+                "COPY demographic_data_staging (area_id, census_year, variable_id, variable_value) FROM STDIN WITH (FORMAT csv)"
             ) as copy:
                 copy.write(buf.read())
 
             cur.execute("""
-                INSERT INTO DEMOGRAPHIC_DATA (area_code, census_year, variable_id, variable_value)
-                SELECT area_code, census_year, variable_id, variable_value
+                INSERT INTO DEMOGRAPHIC_DATA (area_id, census_year, variable_id, variable_value)
+                SELECT area_id, census_year, variable_id, variable_value
                 FROM demographic_data_staging
                 ON CONFLICT DO NOTHING
             """)
 
+        conn.commit()
+        
+def refresh_materialized_views(pool):
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("REFRESH MATERIALIZED VIEW national_percentage_averages")
         conn.commit()
     
 def fill_tables(pool):
     fill_variables_table(pool)
     fill_areas_table(pool)
     fill_demographic_data_table(pool)
+    refresh_materialized_views(pool)
 
 def create_tables_prod():
     pool = get_db_connection_pool(use_dev=False)

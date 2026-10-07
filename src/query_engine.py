@@ -15,24 +15,24 @@ def all_variable_info():
             return result
 
 
-def area_info(census_year: int, area_code: str):
+def area_info(area_id: str):
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                "SELECT * FROM areas WHERE census_year = %s AND area_code = %s",
-                (census_year, area_code),
+                "SELECT * FROM areas WHERE area_id = %s",
+                (area_id,),
             )
             result = cur.fetchone()
 
             return result
 
 
-def area_stats(census_year: int, area_code: str):
+def area_stats(census_year: int, area_id: str):
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                "SELECT * FROM demographic_data WHERE census_year = %s AND area_code = %s",
-                (census_year, area_code),
+                "SELECT * FROM demographic_data WHERE census_year = %s AND area_id = %s",
+                (census_year, area_id),
             )
             result = cur.fetchall()
 
@@ -73,13 +73,13 @@ def all_variable_ids():
 
 
 def variable_values_for_area(
-    area_code: str, census_year: int, variable_ids_to_keep: list[str] | None = None
+    area_id: str, census_year: int, variable_ids_to_keep: list[str] | None = None
 ):
     t = Table("demographic_data")
     q = (
         Query.from_(t)
         .select(t.variable_id, t.variable_value)
-        .where((t.area_code == area_code) & (t.census_year == census_year))
+        .where((t.area_id == area_id) & (t.census_year == census_year))
     )
 
     if variable_ids_to_keep is not None:
@@ -111,7 +111,7 @@ def all_variable_stats(
 
     q = (
         Query.from_(demographic_data)
-        .select("variable_value", "area_code")
+        .select("variable_value", "area_id")
         .where(
             (demographic_data.variable_id == variable_id)
             & (demographic_data.census_year == census_year)
@@ -119,12 +119,11 @@ def all_variable_stats(
     )
 
     if area_type:
-        areas = Table("areas")
+        areas = Table("AREAS")
         q = (
             q.join(areas)
             .on(
-                (demographic_data.area_code == areas.area_code)
-                & (demographic_data.census_year == areas.census_year)
+                demographic_data.area_id == areas.area_id
             )
             .where(areas.area_type == area_type)
         )
@@ -153,7 +152,7 @@ def map_stats(variable_id, census_year=2023):
         with conn.cursor() as cur:
             # Casting to float8 here allows for faster serialiation to JSON without going thru Python's Decimal type.
             cur.execute(
-                "SELECT area_code, variable_value::float8 FROM demographic_data WHERE variable_id = %s AND census_year = %s",
+                "SELECT area_id, variable_value::float8 FROM demographic_data WHERE variable_id = %s AND census_year = %s",
                 (variable_id, census_year),
             )
             return cur.fetchall()
