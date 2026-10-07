@@ -26,6 +26,16 @@
         },
         {
             "type": "shell",
+            "label": "deploy-firebase",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "deploy.py",
+                "--deploy-firebase"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
             "label": "deploy-api",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [

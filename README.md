@@ -20,7 +20,7 @@ uv sync
 python -m src.app
 ```
 
-* The Cloud Run deployment is automated with GH actions, however, if you wish to do a fresh deployment, use:
+* The Cloud Run deployment is automated with GH actions, however, if you wish to do a fresh deployment (this will require the [gcloud](https://cloud.google.com/cli) & [Firebase](https://firebase.google.com/docs/cli) CLIs installed, configured, and globally available), use
 ```shell
 python deploy.py
 ```

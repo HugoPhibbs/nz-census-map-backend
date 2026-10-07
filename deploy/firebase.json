@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "nz-census-map-api",
+          "region": "europe-west2"
+        }
+      }
+    ]
+  }
+}

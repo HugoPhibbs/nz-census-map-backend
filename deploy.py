@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import subprocess
 
@@ -111,6 +112,24 @@ def deploy_cloud_run(service_name):
 
     # We need to join the list up so the env vars are passed through correctly (with double quotes). Otherwise, gcloud interprets each env var as a seperate arg
     subprocess.run(" ".join(deploy_cmd), check=True, shell=True)
+    
+def deploy_firebase_for_api():
+    config = {
+        "hosting": {
+            "rewrites": [{
+                "source": "**",
+                "run": {
+                    "serviceId": CLOUD_RUN_SERVICES["api"]["name"],
+                    "region": os.getenv("GCP_REGION"),
+                }
+            }]
+        }
+    }
+    with open("deploy/firebase.json", "w") as f:
+        json.dump(config, f, indent=2)
+        
+    cmd = ["firebase", "deploy", "--only", "hosting",  "--project", os.getenv("PROJECT_ID"), "--config", "deploy/firebase.json"]
+    subprocess.run(cmd, check=True, shell=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -129,6 +148,8 @@ if __name__ == "__main__":
                         action="store_true", help="Fill the bucket with data")
     parser.add_argument("--update-bucket-cors", "-ubc",
                         action="store_true", help="Update the bucket CORS settings")
+    parser.add_argument("--deploy-firebase", "-df",
+                        action="store_true", help="Deploy Firebase Hosting for API")
     parser.add_argument("--all", "-a", action="store_true",
                         help="Run all steps")
 
@@ -154,3 +175,6 @@ if __name__ == "__main__":
 
     if args.update_bucket_cors or args.all:
         update_bucket_cors()
+        
+    if args.deploy_firebase or args.all:
+        deploy_firebase_for_api()

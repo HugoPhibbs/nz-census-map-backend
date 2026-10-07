@@ -5,3 +5,4 @@ data/*
 
 env.yaml
 __pycache__
+*.log
