@@ -35,3 +35,7 @@ jobs:
           API_SA_NAME: ${{ vars.API_SA_NAME }}
           PROJECT_ID: ${{ vars.PROJECT_ID }}
         run: python deploy.py --deploy-api
+
+      - name: API Health Check
+        run:
+            curl --fail --retry 5 --retry-all-errors --retry-delay 2 ${{ vars.CLOUD_RUN_API_URL }}/health
