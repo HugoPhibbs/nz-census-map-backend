@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_VARIABLES(
     variable_id TEXT PRIMARY KEY,
     variable_unit TEXT,
     plain_name TEXT,
+    available_years INTEGER[],
     description TEXT
 );
 
