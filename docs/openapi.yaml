@@ -9,43 +9,39 @@ servers:
   - url: https://nz-census-map-api-551034620508.europe-west2.run.app
 
 paths:
-  /area:
+  /area/{area_id}:
     get:
       summary: Get info for an area
       parameters:
-        - $ref: "#/components/parameters/CensusYearQuery"
-        - $ref: "#/components/parameters/AreaCode"
+        - $ref: "#/components/parameters/AreaId"
       responses:
         "200":
           $ref: "#/components/responses/Ok"
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /stats/area:
+  /stats/area/{area_id}/{census_year}:
     get:
       summary: Get all statistics for an area
       parameters:
-        - $ref: "#/components/parameters/CensusYearQuery"
-        - $ref: "#/components/parameters/AreaCode"
+        - $ref: "#/components/parameters/AreaId"
+        - $ref: "#/components/parameters/CensusYear"
       responses:
         "200":
           $ref: "#/components/responses/Ok"
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /stats/variable/avgs:
+  /stats/variable/avgs/{census_year}:
     get:
       summary: Get the average of every variable for a census year
       parameters:
-        - name: census_year
-          in: query
-          schema:
-            type: integer
-            default: 2023
+        - $ref: "#/components/parameters/CensusYear"
       responses:
         "200":
           $ref: "#/components/responses/Ok"
-
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /stats/variable/ids:
     get:
@@ -77,11 +73,7 @@ paths:
           required: true
           schema:
             type: string
-        - name: census_year
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: "#/components/parameters/CensusYear"
         - name: area_type
           in: query
           schema:
@@ -94,19 +86,21 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Ok"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
 
   parameters:
-    CensusYearQuery:
+    CensusYear:
       name: census_year
-      in: query
+      in: path
       required: true
       schema:
         type: integer
-    AreaCode:
-      name: area_code
-      in: query
+    AreaId:
+      name: area_id
+      in: path
       required: true
       schema:
         type: string

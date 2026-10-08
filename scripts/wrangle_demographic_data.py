@@ -1,9 +1,9 @@
 from dataclasses import asdict
 
-import pandas as pd
-from variables_meta import VARIABLES, VARIABLES_PERCENTAGE, AGGREGATE_GROUPS
 import anthropic
+import pandas as pd
 from dotenv import load_dotenv
+from variables_meta import AGGREGATE_GROUPS, VARIABLES, VARIABLES_PERCENTAGE
 
 load_dotenv() # For Anthropic API key
 ai_client = anthropic.Anthropic()
@@ -19,7 +19,7 @@ def load_and_clean_df(path, area_id_col="CEN23_TBT_GEO_006"):
 
     demo_df = demo_df[[area_id_col, year_col, var_col, value_col]].rename(
         columns={
-            area_id_col: "area_code",
+            area_id_col: "area_id",
             year_col: "census_year",
             var_col: "variable_id",
             value_col: "variable_value",
@@ -40,16 +40,23 @@ def aggregate_health_data(demo_df):
     is_grouped = demo_df["variable_id"].isin(var_to_group)
     grouped_rows = demo_df[is_grouped].copy()
     grouped_rows["aggregate_group_id"] = grouped_rows["variable_id"].map(var_to_group)
-    
+
     summed = (
         grouped_rows
-        .groupby(["area_code", "census_year", "aggregate_group_id"], as_index=False)["variable_value"]
-        .sum()
+        .groupby(["area_id", "census_year", "aggregate_group_id"], as_index=False)
+        .agg(variable_value=("variable_value", "sum"), n_present=("variable_value", "count"))
     )
-    
+
+    group_sizes = pd.Series(var_to_group).value_counts()
+    summed = summed[summed["n_present"] == summed["aggregate_group_id"].map(group_sizes)]
+    summed = summed.drop(columns="n_present")
+
     summed["variable_id"] = summed["aggregate_group_id"].map(
         lambda gid: AGGREGATE_GROUPS[gid].group_id
     )
+    
+    # Above code: drop any data variables (particularly health-related), where
+    # The total number of occurences is below the amount that we are looking for (e.g. if there are dropped rows, then we don't want to include the aggregate row either, as it will be misleading)
     
     summed = summed.drop(columns="aggregate_group_id")
 
@@ -62,13 +69,13 @@ def add_perc_data(demo_df):
     name_map = {pm.base_variable_id: pm.variable_id for pm in VARIABLES_PERCENTAGE}
 
     pop_resident_df = demo_df[demo_df["variable_id"] == "pop_resident_usual"][
-        ["area_code", "census_year", "variable_value"]
+        ["area_id", "census_year", "variable_value"]
     ].rename(columns={"variable_value": "resident_value"})
 
     base_df = demo_df[demo_df["variable_id"].isin(name_map)].copy()
 
     merged = base_df.merge(
-        pop_resident_df, on=["area_code", "census_year"], how="inner"
+        pop_resident_df, on=["area_id", "census_year"], how="inner"
     )
     merged = merged[merged["resident_value"].notna() & (merged["resident_value"] != 0)]
 
@@ -82,9 +89,9 @@ def add_perc_data(demo_df):
 
 def remove_non_area_rows(demo_df):
     areas_table = pd.read_parquet("data/db-tables/areas_table.parquet")
-    unique_area_codes = areas_table["area_code"].unique()
+    unique_area_ids = areas_table["area_id"].unique()
 
-    demo_df = demo_df[demo_df["area_code"].isin(unique_area_codes)]  # Remove non-area rows, somehow these slipped thru
+    demo_df = demo_df[demo_df["area_id"].isin(unique_area_ids)]  # Remove non-area rows, somehow these slipped thru
     
     return demo_df
 
@@ -161,18 +168,9 @@ def create_and_save_variables_table():
     vars_df.to_parquet("data/db-tables/demographic_variables_table.parquet", index=False)
     
     
-def remove_inland_water_areas_from_demo_df(demo_df):
-    inland_water_areas_df = pd.read_csv("./data/db-tables/inland_water_areas.csv")
-    
-    demo_df = demo_df.merge(
-        inland_water_areas_df,
-        on=["area_code", "census_year"],
-        how="left",
-        indicator=True,
-    )
-    demo_df = demo_df[demo_df["_merge"] == "left_only"].drop(columns="_merge")
-    
-    return demo_df
+def remove_inland_water_areas_from_demo_df(demo_df: pd.DataFrame):
+    inland_water_codes = pd.read_csv("./data/db-tables/inland_water_areas.csv", header=None, dtype=str)[0]
+    return demo_df[~demo_df["area_id"].isin(inland_water_codes)]
 
 def drop_intermediary_rows(demo_df):
     for variable in VARIABLES:
@@ -181,24 +179,29 @@ def drop_intermediary_rows(demo_df):
 
     return demo_df
 
+def drop_missing_rows(demo_df):
+    demo_df = demo_df[demo_df["variable_value"].notna()] # Just incase any sneaked through
+    return demo_df
+
 def save_demo_df(demo_df):
     demo_df.to_csv("data/db-tables/csv-debug/demographic_data_table.csv", index=False)
     demo_df.to_parquet("data/db-tables/demographic_data_table.parquet", index=False)
 
 if __name__ == "__main__":    
-    # demo_df = load_and_clean_df("data/web-download/demographic_data_download.csv")
-    # demo_s1_df = load_and_clean_df("data/web-download/demographic_data_download_sa1.csv", area_id_col="CEN23_TBT_GEO_002")
+    demo_df = load_and_clean_df("data/web-download/demographic_data_download.csv_new")
+    demo_s1_df = load_and_clean_df("data/web-download/demographic_data_download_sa1.csv_new", area_id_col="CEN23_TBT_GEO_002")
     
-    # demo_df = pd.concat([demo_df, demo_s1_df], ignore_index=True)
+    demo_df = pd.concat([demo_df, demo_s1_df], ignore_index=True)
     
-    # demo_df = remove_non_area_rows(demo_df)
-    # demo_df = rename_variables(demo_df)
+    demo_df = remove_non_area_rows(demo_df)
+    demo_df = rename_variables(demo_df)
+    demo_df = remove_inland_water_areas_from_demo_df(demo_df)
+    demo_df = aggregate_health_data(demo_df)
+    demo_df = add_perc_data(demo_df)
+    demo_df = drop_intermediary_rows(demo_df)
+    demo_df = drop_missing_rows(demo_df)
     
-    # demo_df = aggregate_health_data(demo_df)
-    # demo_df = add_perc_data(demo_df)
-    # demo_df = drop_intermediary_rows(demo_df)
-    
-    # demo_df["variable_value"] = demo_df["variable_value"].round(2)
+    demo_df["variable_value"] = demo_df["variable_value"].round(2)
     
     create_and_save_variables_table()
-    # save_demo_df(demo_df)
+    save_demo_df(demo_df)

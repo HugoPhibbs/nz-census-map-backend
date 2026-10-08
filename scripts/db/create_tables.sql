@@ -1,9 +1,7 @@
 CREATE TABLE IF NOT EXISTS AREAS(
-    area_code TEXT,
+    area_id TEXT PRIMARY KEY,
     area_name TEXT,
-    area_type TEXT,
-    census_year INTEGER,
-    PRIMARY KEY (area_code, census_year)
+    area_type TEXT
 );
 
 CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_VARIABLES(
@@ -19,26 +17,37 @@ https://www.stats.govt.nz/assets/Methods/Statistical-standard-for-geographic-are
 */
 
 CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_DATA(
-    area_code TEXT,
+    area_id TEXT,
     census_year INTEGER,
     variable_id TEXT,
     variable_value NUMERIC,
-    PRIMARY KEY (area_code, census_year, variable_id),
-    FOREIGN KEY (area_code, census_year) REFERENCES AREAS(area_code, census_year) ON DELETE RESTRICT,
+    PRIMARY KEY (area_id, census_year, variable_id),
+    FOREIGN KEY (area_id) REFERENCES AREAS(area_id) ON DELETE RESTRICT,
     FOREIGN KEY (variable_id) REFERENCES DEMOGRAPHIC_VARIABLES(variable_id) ON DELETE RESTRICT
 );
 
 -- This gives an index for fetching variable data for the frontend UI
 CREATE INDEX IF NOT EXISTS idx_demographic_var_year
-ON demographic_data (variable_id, census_year) INCLUDE (area_code, variable_value);
+ON demographic_data (variable_id, census_year) INCLUDE (area_id, variable_value);
 
-CREATE MATERIALIZED VIEW NATIONAL_PERCENTAGE_AVERAGES AS
+-- CREATE MATERIALIZED VIEW IF NOT EXISTS NATIONAL_PERCENTAGE_AVERAGES AS
+--                 SELECT pct.variable_id, pct.census_year,
+--                     ROUND(SUM(pct.variable_value * pop.variable_value) / SUM(pop.variable_value), 2) AS national_avg
+--                 FROM DEMOGRAPHIC_DATA pct
+--                 JOIN DEMOGRAPHIC_DATA pop
+--                 ON pop.area_id = pct.area_id
+--                 AND pop.census_year = pct.census_year
+--                 AND pop.variable_id = 'pop_resident_usual'
+--                 WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_id) = 3
+--                 GROUP BY pct.variable_id, pct.census_year
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS NATIONAL_PERCENTAGE_AVERAGES AS
                 SELECT pct.variable_id, pct.census_year,
                     ROUND(SUM(pct.variable_value * pop.variable_value) / SUM(pop.variable_value), 2) AS national_avg
                 FROM DEMOGRAPHIC_DATA pct
                 JOIN DEMOGRAPHIC_DATA pop
-                ON pop.area_code = pct.area_code
+                ON pop.area_id = pct.area_id
                 AND pop.census_year = pct.census_year
                 AND pop.variable_id = 'pop_resident_usual'
-                WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_code) = 3
+                WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_id) = 3
                 GROUP BY pct.variable_id, pct.census_year LIMIT 100
