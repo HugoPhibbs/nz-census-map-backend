@@ -22,11 +22,11 @@ def fill_variables_table(pool):
             for row in all_variable_ids.itertuples(index=False):
                 cur.execute(
                     """
-                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_id, variable_unit, plain_name, description)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO DEMOGRAPHIC_VARIABLES (variable_id, variable_unit, plain_name, available_years, description)
+                    VALUES (%s, %s, %s, %s::integer[], %s)
                     ON CONFLICT DO NOTHING
                     """,
-                    (row.variable_id, row.variable_unit, row.plain_name, row.description)
+                    (row.variable_id, row.variable_unit, row.plain_name, [int(y) for y in row.available_years], row.description)
                 )
 
 def fill_areas_table(pool):

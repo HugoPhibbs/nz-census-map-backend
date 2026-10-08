@@ -140,7 +140,7 @@ def add_variable_descriptions(var_df):
     return var_df
         
 
-def create_and_save_variables_table():
+def create_and_save_variables_table(demo_df):
     base_vars_rows = [asdict(v) for v in VARIABLES]
     base_vars_rows = [row for row in base_vars_rows if row["keep"] == True]
     
@@ -163,7 +163,10 @@ def create_and_save_variables_table():
     vars_df = pd.DataFrame(base_vars_rows + perc_rows + aggregate_groups_rows)
     
     vars_df = add_variable_descriptions(vars_df)
-    
+
+    years_by_var = demo_df.groupby("variable_id")["census_year"].unique()
+    vars_df["available_years"] = vars_df["variable_id"].map(lambda v: sorted(int(y) for y in years_by_var.get(v, [])))
+
     vars_df.to_csv("data/db-tables/csv-debug/demographic_variables_table.csv", index=False)
     vars_df.to_parquet("data/db-tables/demographic_variables_table.parquet", index=False)
     
@@ -203,5 +206,5 @@ if __name__ == "__main__":
     
     demo_df["variable_value"] = demo_df["variable_value"].round(2)
     
-    create_and_save_variables_table()
+    create_and_save_variables_table(demo_df)
     save_demo_df(demo_df)

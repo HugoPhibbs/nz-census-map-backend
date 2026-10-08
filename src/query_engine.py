@@ -14,7 +14,6 @@ def all_variable_info():
             result = cur.fetchall()
             return result
 
-
 def area_info(area_id: str):
     with get_db_connection_pool().connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
@@ -56,7 +55,13 @@ def variable_averages(census_year: int):
             )
             result = cur.fetchall()
             return {row["variable_id"]: row["national_avg"] for row in result}
-
+        
+def variable_ids_to_available_years():
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT variable_id, available_years FROM demographic_variables")
+            result = cur.fetchall()
+            return {row[0]: row[1] for row in result}
 
 def variable_ids_to_name():
     with get_db_connection_pool().connection() as conn, conn.cursor() as cur:

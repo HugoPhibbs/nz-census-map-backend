@@ -91,6 +91,11 @@ def get_variable_ids_to_name():
     result = query_engine.variable_ids_to_name()
     return result, 200
 
+@app.route("/stats/variable/ids/to-available-years")
+@cache.cached()
+def get_variable_ids_to_available_years():
+    result = query_engine.variable_ids_to_available_years()
+    return result, 200
 
 @app.route("/stats/variable/ids")
 @cache.cached()
