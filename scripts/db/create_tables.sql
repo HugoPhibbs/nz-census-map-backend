@@ -41,7 +41,7 @@ ON demographic_data (variable_id, census_year) INCLUDE (area_id, variable_value)
 --                 WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_id) = 3
 --                 GROUP BY pct.variable_id, pct.census_year
 
-CREATE MATERIALIZED VIEW NATIONAL_PERCENTAGE_AVERAGES AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS NATIONAL_PERCENTAGE_AVERAGES AS
                 SELECT pct.variable_id, pct.census_year,
                     ROUND(SUM(pct.variable_value * pop.variable_value) / SUM(pop.variable_value), 2) AS national_avg
                 FROM DEMOGRAPHIC_DATA pct
