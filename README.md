@@ -36,5 +36,6 @@ python deploy.py
 * The frontend is written with Next.js and TypeScript, and the backend is written with Python using Flask & Psycopg. 
 * The PostgreSQL database is deployed onto [Neon](https://neon.com/), while Google's [Cloud Run](https://cloud.google.com/run) is used to deploy the HTTP API.
 * Map files (as [pmtiles](https://docs.protomaps.com/pmtiles/)) are stored on [Cloud Storage](https://docs.cloud.google.com/storage/docs), and are fetched directly from the frontend using a presigned URL.
+* Firebase [Hosting](https://firebase.google.com/docs/hosting) is used to map the subdomain `api.nz-census-map.com` to the API within Cloud Run
 
 <img src="docs/system-arch.drawio.png"  alt="Screenshot" width="400">
