@@ -87,6 +87,11 @@ def add_perc_data(demo_df):
     
     return demo_df
 
+def cap_percentages(demo_df):
+    is_over_100_perc = demo_df["variable_id"].str.startswith("perc") & (demo_df["variable_value"] > 100)
+    demo_df.loc[is_over_100_perc, "variable_value"] = 100
+    return demo_df
+
 def remove_non_area_rows(demo_df):
     areas_table = pd.read_parquet("data/db-tables/areas_table.parquet")
     unique_area_ids = areas_table["area_id"].unique()
@@ -201,6 +206,7 @@ if __name__ == "__main__":
     demo_df = remove_inland_water_areas_from_demo_df(demo_df)
     demo_df = aggregate_health_data(demo_df)
     demo_df = add_perc_data(demo_df)
+    demo_df = cap_percentages(demo_df)
     demo_df = drop_intermediary_rows(demo_df)
     demo_df = drop_missing_rows(demo_df)
     
