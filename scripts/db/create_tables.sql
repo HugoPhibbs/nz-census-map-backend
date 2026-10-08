@@ -46,8 +46,8 @@ CREATE MATERIALIZED VIEW NATIONAL_PERCENTAGE_AVERAGES AS
                     ROUND(SUM(pct.variable_value * pop.variable_value) / SUM(pop.variable_value), 2) AS national_avg
                 FROM DEMOGRAPHIC_DATA pct
                 JOIN DEMOGRAPHIC_DATA pop
-                ON pop.area_code = pct.area_code
+                ON pop.area_id = pct.area_id
                 AND pop.census_year = pct.census_year
                 AND pop.variable_id = 'pop_resident_usual'
-                WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_code) = 3
+                WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_id) = 3
                 GROUP BY pct.variable_id, pct.census_year LIMIT 100
