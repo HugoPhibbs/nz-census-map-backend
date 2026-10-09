@@ -2,7 +2,7 @@ import os
 import time
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, request
 from flask_caching import Cache
 from flask_compress import Compress
 from flask_cors import CORS
@@ -103,7 +103,27 @@ def get_all_variables():
     result = query_engine.all_variable_ids()
     return result, 200
 
+@app.route("/stats/variable/<variable_id>/compare")
+@cache.cached(response_hit_indication=True, query_string=True)
+def get_variable_compare(variable_id):
+    year_from = request.args.get("from", type=int)
+    year_to = request.args.get("to", type=int)
+    compare_method = request.args.get("method", "perc")
+    
+    if (year_from is None or year_to is None) or (year_from == year_to):
+        return {"error": "Query params 'from' and 'to' must specified, and be two different integer years"}, 400
+    
+    if compare_method != "perc":
+        return {"error": "Invalid compare method. Only 'perc' currently is supported."}, 400
+    
+    result = query_engine.variable_compare_perc(variable_id, year_from, year_to)
+    
+    if result == []:
+        return {"error": "No statistics found for the combination of the specified variable and census years"}, 404
 
+    return result, 200
+    
+    
 @app.route("/stats/variable/<variable_id>/<int:census_year>")
 @cache.cached(response_hit_indication=True)
 def get_all_map_stats(variable_id, census_year):
