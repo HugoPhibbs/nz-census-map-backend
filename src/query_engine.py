@@ -161,3 +161,26 @@ def map_stats(variable_id, census_year=2023):
                 (variable_id, census_year),
             )
             return cur.fetchall()
+        
+def variable_compare_perc(variable_id, year_from, year_to):
+    if variable_id.startswith("perc_"):
+        change_expr = "t.variable_value - f.variable_value"
+    else:
+        change_expr = "100.0 * (t.variable_value - f.variable_value) / NULLIF(f.variable_value, 0)"
+    
+    with get_db_connection_pool().connection() as conn:
+        with conn.cursor() as cur:
+            start = time.perf_counter()
+            cur.execute(
+                f"""
+                SELECT f.area_id, (ROUND({change_expr}, 2)::float8) AS change
+                FROM demographic_data f
+                JOIN demographic_data t
+                  ON t.area_id = f.area_id AND t.variable_id = f.variable_id
+                WHERE f.variable_id = %s AND f.census_year = %s AND t.census_year = %s AND ({change_expr}) IS NOT NULL
+                """,
+                (variable_id, year_from, year_to),
+            )
+            res = cur.fetchall()
+            print(f"Query took {(time.perf_counter() - start) * 1000:.2f} ms")
+            return res
