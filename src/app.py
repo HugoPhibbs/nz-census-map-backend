@@ -106,8 +106,8 @@ def get_all_variables():
 @app.route("/stats/variable/<variable_id>/compare")
 @cache.cached(response_hit_indication=True, query_string=True)
 def get_variable_compare(variable_id):
-    year_from = int(request.args.get("from", type=int))
-    year_to = int(request.args.get("to", type=int))
+    year_from = request.args.get("from", type=int)
+    year_to = request.args.get("to", type=int)
     compare_method = request.args.get("method", "perc")
     
     if (year_from is None or year_to is None) or (year_from == year_to):
