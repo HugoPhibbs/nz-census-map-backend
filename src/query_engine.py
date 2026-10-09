@@ -162,11 +162,13 @@ def map_stats(variable_id, census_year=2023):
             )
             return cur.fetchall()
         
-def variable_compare_perc(variable_id, year_from, year_to):
-    if variable_id.startswith("perc_"):
+def variable_compare(variable_id, year_from, year_to, method):
+    if method == "delta":
         change_expr = "t.variable_value - f.variable_value"
-    else:
+    elif method == "perc":
         change_expr = "100.0 * (t.variable_value - f.variable_value) / NULLIF(f.variable_value, 0)"
+    else:
+        raise ValueError(f"Invalid method: {method}")
     
     with get_db_connection_pool().connection() as conn:
         with conn.cursor() as cur:
