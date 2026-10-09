@@ -106,15 +106,15 @@ def get_all_variables():
 @app.route("/stats/variable/<variable_id>/compare")
 @cache.cached(response_hit_indication=True, query_string=True)
 def get_variable_compare(variable_id):
-    year_from = int(request.args.get("from"))
-    year_to = int(request.args.get("to"))
+    year_from = int(request.args.get("from", type=int))
+    year_to = int(request.args.get("to", type=int))
     compare_method = request.args.get("method", "perc")
-    
-    if compare_method != "perc":
-        return {"error": "Invalid compare method. Only 'perc' currently is supported."}, 400
     
     if (year_from is None or year_to is None) or (year_from == year_to):
         return {"error": "Query params 'from' and 'to' must specified, and be two different integer years"}, 400
+    
+    if compare_method != "perc":
+        return {"error": "Invalid compare method. Only 'perc' currently is supported."}, 400
     
     result = query_engine.variable_compare_perc(variable_id, year_from, year_to)
     
