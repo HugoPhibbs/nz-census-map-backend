@@ -108,15 +108,15 @@ def get_all_variables():
 def get_variable_compare(variable_id):
     year_from = request.args.get("from", type=int)
     year_to = request.args.get("to", type=int)
-    compare_method = request.args.get("method", "perc")
+    method = request.args.get("method", default="delta")
     
     if (year_from is None or year_to is None) or (year_from == year_to):
         return {"error": "Query params 'from' and 'to' must specified, and be two different integer years"}, 400
     
-    if compare_method != "perc":
-        return {"error": "Invalid compare method. Only 'perc' currently is supported."}, 400
+    if method not in ["perc", "delta"]:
+        return {"error": "Query param 'method' must be either 'perc' or 'delta'"}, 400
     
-    result = query_engine.variable_compare_perc(variable_id, year_from, year_to)
+    result = query_engine.variable_compare(variable_id, year_from, year_to, method)
     
     if result == []:
         return {"error": "No statistics found for the combination of the specified variable and census years"}, 404
