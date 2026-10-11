@@ -1,5 +1,4 @@
 import os
-import time
 
 from dotenv import load_dotenv
 from flask import Flask, request
@@ -8,7 +7,6 @@ from flask_compress import Compress
 from flask_cors import CORS
 
 from src import query_engine
-from src.utils import get_db_connection_pool
 
 load_dotenv()
 
@@ -20,21 +18,12 @@ compress = Compress(app)
 
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
 
+app.json.sort_keys = False  # Disable sorting of keys in JSON responses for better performance
+
 @app.route("/health")
 def health_check():
-    healthy = True
-    try:
-        with get_db_connection_pool().connection() as conn:
-            with conn.cursor() as cur:
-                start = time.perf_counter()
-                cur.execute("SELECT 1")
-                result = cur.fetchone()
-                db_ping_time = round((time.perf_counter() - start) * 1000, 2)
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        healthy = False
-            
-    if healthy and result and result[0] == 1:
+    healthy, db_ping_time = query_engine.health_check()
+    if healthy and db_ping_time is not None:
         return {"status": "ok", "db_ping_time_ms": db_ping_time}, 200
     else:
         return {"status": "broken"}, 503
@@ -123,13 +112,13 @@ def get_variable_compare(variable_id):
 
     return result, 200
     
-    
+
 @app.route("/stats/variable/<variable_id>/<int:census_year>")
 @cache.cached(response_hit_indication=True)
 def get_all_map_stats(variable_id, census_year):
     result = query_engine.map_stats(variable_id, census_year)
     
-    if result == []:
+    if len(result) == 0:
         return {"error": "No statistics found for the combination of the specified variable and census year"}, 404
 
     return result, 200

@@ -1,9 +1,7 @@
 import functools
 import os
-import time
 
 import psycopg
-from psycopg.rows import dict_row
 import psycopg_pool
 from dotenv import load_dotenv
 from psycopg.types.numeric import NumericBinaryLoader, NumericLoader
@@ -27,8 +25,8 @@ class IntOrFloatNumericBinaryLoader(NumericBinaryLoader):
     def load(self, data):
         return normalize_numeric(super().load(data))
 
-@functools.lru_cache(maxsize=1)
-def get_db_connection_pool(use_dev=None):
+@functools.lru_cache
+def get_db_connection_pool(use_dev=None, autocommit=False):
     psycopg.adapters.register_loader("numeric", IntOrFloatNumericLoader)
     psycopg.adapters.register_loader("numeric", IntOrFloatNumericBinaryLoader)
 
@@ -44,5 +42,5 @@ def get_db_connection_pool(use_dev=None):
         conninfo=conn_info,
         min_size=1,
         max_size=10,
-        check= psycopg_pool.ConnectionPool.check_connection,
+        kwargs={"autocommit": autocommit},
     )
