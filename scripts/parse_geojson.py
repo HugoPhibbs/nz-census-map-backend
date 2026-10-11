@@ -36,14 +36,14 @@ def parse_all_files():
         adjust_properties(
             geojson, name_key, id_key, file["area_type"], all_properties)
 
-        # with open(f"./data/geojson/{file_name.split('.')[0]}-adjusted.json", "w", encoding="utf-8") as f:
-        #     json.dump(geojson, f, indent=2, ensure_ascii=False)
+        with open(f"./data/geojson/{file_name.split('.')[0]}-adjusted.json", "w", encoding="utf-8") as f:
+            json.dump(geojson, f, indent=2, ensure_ascii=False)
             
         
     area_sq_kms_df = pd.DataFrame(area_sq_kms, columns=["area_id", "area_sq_km"])
     area_sq_kms_df.to_parquet("./data/pop-density/area_sq_kms.parquet", index=False)
-    # inland_water_area_ids_df = pd.Series(inland_water_area_ids)
-    # inland_water_area_ids_df.to_csv("./data/db-tables/inland_water_areas.csv", index=False, header=False)
+    inland_water_area_ids_df = pd.Series(inland_water_area_ids)
+    inland_water_area_ids_df.to_csv("./data/db-tables/inland_water_areas.csv", index=False, header=False)
 
     return all_properties
 
@@ -101,4 +101,4 @@ def save_all_properties(all_properties):
 
 if __name__ == "__main__":
     all_properties = parse_all_files()
-    # save_all_properties(all_properties)
+    save_all_properties(all_properties)
