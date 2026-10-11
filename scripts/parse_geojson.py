@@ -18,6 +18,8 @@ def parse_all_files():
     
     inland_water_area_ids = []
     
+    area_sq_kms = []
+    
     for file in files:
         file_name = file["name"]
         name_key = file["name_key"]
@@ -28,6 +30,8 @@ def parse_all_files():
         
         new_inland_water_area_ids = remove_inland_water_areas(geojson, name_key, id_key)
         inland_water_area_ids.extend(new_inland_water_area_ids)
+        
+        area_sq_kms.extend(get_area_squared_kms(geojson, id_key))
 
         adjust_properties(
             geojson, name_key, id_key, file["area_type"], all_properties)
@@ -35,6 +39,9 @@ def parse_all_files():
         with open(f"./data/geojson/{file_name.split('.')[0]}-adjusted.json", "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2, ensure_ascii=False)
             
+        
+    area_sq_kms_df = pd.DataFrame(area_sq_kms, columns=["area_id", "area_sq_km"])
+    area_sq_kms_df.to_parquet("./data/pop-density/area_sq_kms.parquet", index=False)
     inland_water_area_ids_df = pd.Series(inland_water_area_ids)
     inland_water_area_ids_df.to_csv("./data/db-tables/inland_water_areas.csv", index=False, header=False)
 
@@ -55,8 +62,19 @@ def remove_inland_water_areas(geojson, name_key, id_key):
     geojson["features"] = new_features
     return ids
 
+def get_area_squared_kms(geojson, id_key):
+    area_sq_kms = []
+    
+    for feature in geojson["features"]:
+        area_sq_km = feature["properties"]["AREA_SQ_KM"]
+        area_id = feature["properties"][id_key]
+        
+        area_sq_kms.append((area_id, area_sq_km))
+    
+    return area_sq_kms
 
-def adjust_properties(geojson, name_key, id_key, area_type, all_properties):
+
+def adjust_properties(geojson, name_key, id_key, area_type, all_properties):    
     for feature in geojson["features"]:
         old_properties = feature["properties"]
         area_id = old_properties[id_key]

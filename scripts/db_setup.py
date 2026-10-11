@@ -15,11 +15,11 @@ def stop_dev_db(reset=False):
     subprocess.run(down_cmd, cwd="./scripts/db", check=True)
     
 def fill_variables_table(pool):
-    all_variable_ids = pd.read_parquet("./data/db-tables/demographic_variables_table.parquet")
+    variables_df = pd.read_parquet("./data/db-tables/demographic_variables_table.parquet")
     
     with pool.connection() as conn:
         with conn.cursor() as cur:
-            for row in all_variable_ids.itertuples(index=False):
+            for row in variables_df.itertuples(index=False):
                 cur.execute(
                     """
                     INSERT INTO DEMOGRAPHIC_VARIABLES (variable_id, variable_unit, plain_name, available_years, description)
@@ -45,7 +45,7 @@ def fill_areas_table(pool):
     
 
 def fill_demographic_data_table(pool):
-    df = pd.read_parquet("./data/db-tables/demographic_data_table.parquet")
+    demo_df = pd.read_parquet("./data/db-tables/demographic_data_table.parquet")
 
     with pool.connection() as conn:
         with conn.cursor() as cur:
@@ -59,7 +59,7 @@ def fill_demographic_data_table(pool):
             """)
 
             buf = io.StringIO()
-            df.to_csv(buf, index=False, header=False)
+            demo_df.to_csv(buf, index=False, header=False)
             buf.seek(0)
 
             with cur.copy(

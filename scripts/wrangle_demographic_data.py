@@ -87,9 +87,17 @@ def add_perc_data(demo_df):
     
     return demo_df
 
-def cap_percentages(demo_df):
-    is_over_100_perc = demo_df["variable_id"].str.startswith("perc") & (demo_df["variable_value"] > 100)
-    demo_df.loc[is_over_100_perc, "variable_value"] = 100
+def add_population_density_data(demo_df):
+    area_df = pd.read_parquet("./data/pop-density/area_sq_kms.parquet")
+    population_df = demo_df[demo_df["variable_id"] == "pop_resident_usual"]
+
+    # Right join so areas with no population aren't included
+    density_df = area_df.merge(population_df, on="area_id", how="right")
+    density_df["variable_value"] = density_df["variable_value"] / density_df["area_sq_km"]
+    density_df["variable_id"] = "pop_density"
+
+    density_df = density_df[["area_id", "census_year", "variable_id", "variable_value"]]
+    demo_df = pd.concat([demo_df, density_df], ignore_index=True)
     return demo_df
 
 def remove_non_area_rows(demo_df):
@@ -99,6 +107,10 @@ def remove_non_area_rows(demo_df):
     demo_df = demo_df[demo_df["area_id"].isin(unique_area_ids)]  # Remove non-area rows, somehow these slipped thru
     
     return demo_df
+
+def remove_inland_water_areas_from_demo_df(demo_df: pd.DataFrame):
+    inland_water_codes = pd.read_csv("./data/db-tables/inland_water_areas.csv", header=None, dtype=str)[0]
+    return demo_df[~demo_df["area_id"].isin(inland_water_codes)]
 
 def rename_variables(demo_df):
     VARIABLE_ID_MAP = {v.census_code: v.variable_id for v in VARIABLES}
@@ -143,7 +155,22 @@ def add_variable_descriptions(var_df):
         
     var_df["description"] = descriptions
     return var_df
-        
+
+def drop_intermediary_rows(demo_df):
+    for variable in VARIABLES:
+        if variable.keep == False:
+            demo_df = demo_df[demo_df["variable_id"] != variable.variable_id]
+
+    return demo_df
+
+def cap_percentages(demo_df):
+    is_over_100_perc = demo_df["variable_id"].str.startswith("perc") & (demo_df["variable_value"] > 100)
+    demo_df.loc[is_over_100_perc, "variable_value"] = 100
+    return demo_df
+
+def drop_missing_rows(demo_df):
+    demo_df = demo_df[demo_df["variable_value"].notna()] # Just incase any sneaked through
+    return demo_df
 
 def create_and_save_variables_table(demo_df):
     base_vars_rows = [asdict(v) for v in VARIABLES]
@@ -164,7 +191,15 @@ def create_and_save_variables_table(demo_df):
     perc_rows = [asdict(pct) for pct in VARIABLES_PERCENTAGE]
     for row in perc_rows:
         del row["base_variable_id"]
+        
+    pop_density_row = {
+        "variable_id": "pop_density",
+        "variable_unit": "COUNT_PER_SQ_KM",
+        "plain_name": "Population Density",
+        "description": "The number of people per square kilometer for an area",
+    }
     
+    base_vars_rows.append(pop_density_row)
     vars_df = pd.DataFrame(base_vars_rows + perc_rows + aggregate_groups_rows)
     
     vars_df = add_variable_descriptions(vars_df)
@@ -174,22 +209,7 @@ def create_and_save_variables_table(demo_df):
 
     vars_df.to_csv("data/db-tables/csv-debug/demographic_variables_table.csv", index=False)
     vars_df.to_parquet("data/db-tables/demographic_variables_table.parquet", index=False)
-    
-    
-def remove_inland_water_areas_from_demo_df(demo_df: pd.DataFrame):
-    inland_water_codes = pd.read_csv("./data/db-tables/inland_water_areas.csv", header=None, dtype=str)[0]
-    return demo_df[~demo_df["area_id"].isin(inland_water_codes)]
 
-def drop_intermediary_rows(demo_df):
-    for variable in VARIABLES:
-        if variable.keep == False:
-            demo_df = demo_df[demo_df["variable_id"] != variable.variable_id]
-
-    return demo_df
-
-def drop_missing_rows(demo_df):
-    demo_df = demo_df[demo_df["variable_value"].notna()] # Just incase any sneaked through
-    return demo_df
 
 def save_demo_df(demo_df):
     demo_df.to_csv("data/db-tables/csv-debug/demographic_data_table.csv", index=False)
@@ -204,8 +224,11 @@ if __name__ == "__main__":
     demo_df = remove_non_area_rows(demo_df)
     demo_df = rename_variables(demo_df)
     demo_df = remove_inland_water_areas_from_demo_df(demo_df)
+    
+    demo_df = add_population_density_data(demo_df)
     demo_df = aggregate_health_data(demo_df)
     demo_df = add_perc_data(demo_df)
+    
     demo_df = cap_percentages(demo_df)
     demo_df = drop_intermediary_rows(demo_df)
     demo_df = drop_missing_rows(demo_df)
