@@ -5,8 +5,6 @@
 
 _Main repository: [nz-census-map](https://github.com/HugoPhibbs/nz-census-map)_
 
-Backend code for [NZ Census Map](https://github.com/HugoPhibbs/nz-census-map).
-
 ## Instructions
 
 * You will need [uv](https://docs.astral.sh/uv/getting-started/installation/) and Python 3.12 installed.
