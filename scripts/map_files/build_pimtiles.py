@@ -15,8 +15,6 @@ COMBINED_BASEMAP_PATH = format_pmtiles_path("nz_basemap")
 AREA_BOUNDARIES_SA2_SA3_TA_PATH = format_pmtiles_path("area_boundaries_sa2_sa3_ta")
 AREA_BOUNDARIES_SA1_PATH = format_pmtiles_path("area_boundaries_sa1")
 
-COMBINED_PMTILES_PATH = format_pmtiles_path("combined_basemap_sa2_sa3_ta")
-
 GEOJSON_TA_PATH = format_geojson_path("boundaries_ta")
 GEOJSON_SA3_PATH = format_geojson_path("boundaries_sa3")
 GEOJSON_SA2_PATH = format_geojson_path("boundaries_sa2")

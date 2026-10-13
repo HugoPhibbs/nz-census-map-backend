@@ -85,7 +85,7 @@ def create_service_account():
 
 
 def fill_bucket_with_data():
-    files_to_upload = ["combined.pmtiles", "sa1.pmtiles"]
+    files_to_upload = ["nz_basemap.pmtiles", "area_boundaries_sa1.pmtiles", "area_boundaries_sa2_sa3_ta.pmtiles"]
     for file in files_to_upload:
         upload_cmd = [
             "gsutil", "cp", f"./data/pmtiles/{file}", f"gs://{os.getenv('BUCKET_NAME')}/{file}"]
