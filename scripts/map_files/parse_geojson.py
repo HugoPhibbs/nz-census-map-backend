@@ -20,6 +20,8 @@ def parse_all_files():
     
     area_sq_kms = []
     
+    bounding_boxes = []
+    
     for file in files:
         file_name = file["name"]
         name_key = file["name_key"]
@@ -35,18 +37,22 @@ def parse_all_files():
         area_sq_kms.extend(get_area_squared_kms(geojson, id_key))
 
         adjust_properties(
-            geojson, name_key, id_key, file["area_type"], all_properties)
+            geojson, name_key, id_key, file["area_type"], all_properties
+        )
 
+        bounding_boxes.extend(save_bounding_boxes(geojson))
+        
         with open(f"./data/geojson/boundaries_{area_type.lower()}.json", "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2, ensure_ascii=False)
             
         
     area_sq_kms_df = pd.DataFrame(area_sq_kms, columns=["area_id", "area_sq_km"])
     area_sq_kms_df.to_parquet("./data/pop-density/area_sq_kms.parquet", index=False)
+    
     inland_water_area_ids_df = pd.Series(inland_water_area_ids)
     inland_water_area_ids_df.to_csv("./data/db-tables/inland_water_areas.csv", index=False, header=False)
 
-    return all_properties
+    return all_properties, bounding_boxes
 
 
 def remove_inland_water_areas(geojson, name_key, id_key):
@@ -74,6 +80,35 @@ def get_area_squared_kms(geojson, id_key):
     
     return area_sq_kms
 
+def get_bounding_box(geojson_feature):
+    geometry = geojson_feature["geometry"]
+    polygons = [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"] # Handle MultiPolygon case: list of Polygons
+
+    min_lng = float('inf')
+    min_lat = float('inf')
+    max_lng = float('-inf')
+    max_lat = float('-inf')
+    
+    for polygon in polygons:
+        for ring in polygon:
+            for lng, lat in ring:
+                min_lng = min(min_lng, lng)
+                min_lat = min(min_lat, lat)
+                max_lng = max(max_lng, lng)
+                max_lat = max(max_lat, lat)
+
+    round2dp = lambda x: round(x, 4)
+    
+    return [round2dp(min_lng), round2dp(min_lat), round2dp(max_lng), round2dp(max_lat)]
+
+def save_bounding_boxes(geojson):
+    bounding_boxes = []
+    for feature in geojson["features"]:
+        bounding_box = get_bounding_box(feature)
+        area_id = feature["properties"]["area_id"]
+        bounding_boxes.append((area_id, bounding_box))
+
+    return bounding_boxes
 
 def adjust_properties(geojson, name_key, id_key, area_type, all_properties):    
     for feature in geojson["features"]:
@@ -83,7 +118,7 @@ def adjust_properties(geojson, name_key, id_key, area_type, all_properties):
         new_properties = {
             "area_name": old_properties[name_key],
             "area_id": area_id,
-            "area_type": area_type
+            "area_type": area_type,
         }
         
         if area_type == "SA1":
@@ -93,13 +128,14 @@ def adjust_properties(geojson, name_key, id_key, area_type, all_properties):
         all_properties.append(new_properties)
 
 
-def save_all_properties(all_properties):
-    df = pd.DataFrame(all_properties)
-    df.to_csv("./data/db-tables/csv-debug/areas_table.csv",
-              index=False, encoding="utf-8")
-    df.to_parquet("./data/db-tables/areas_table.parquet", index=False)
+def save_areas_table(all_properties, bounding_boxes):
+    areas_df = pd.DataFrame(all_properties)
+    bounding_boxes_df = pd.DataFrame(bounding_boxes, columns=["area_id", "bounding_box"])
+    areas_df = areas_df.merge(bounding_boxes_df, on="area_id", how="left")
+    
+    areas_df.to_parquet("./data/db-tables/areas_table.parquet", index=False)
 
 
 if __name__ == "__main__":
-    all_properties = parse_all_files()
-    save_all_properties(all_properties)
+    all_properties, bounding_boxes = parse_all_files()
+    save_areas_table(all_properties, bounding_boxes)
