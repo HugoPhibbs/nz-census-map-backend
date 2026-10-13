@@ -86,10 +86,10 @@ def refresh_materialized_views(pool):
         conn.commit()
     
 def fill_tables(pool):
-    # fill_variables_table(pool)
+    fill_variables_table(pool)
     fill_areas_table(pool)
-    # fill_demographic_data_table(pool)
-    # refresh_materialized_views(pool)
+    fill_demographic_data_table(pool)
+    refresh_materialized_views(pool)
 
 def create_tables_prod():
     pool = get_db_connection_pool(use_dev=False)
