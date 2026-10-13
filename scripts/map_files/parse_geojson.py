@@ -24,6 +24,7 @@ def parse_all_files():
         file_name = file["name"]
         name_key = file["name_key"]
         id_key = file["id_key"]
+        area_type = file["area_type"]
         
         with open(f"./data/geojson/{file_name}", "r", encoding="utf-8") as f:
             geojson = json.load(f)
@@ -36,7 +37,7 @@ def parse_all_files():
         adjust_properties(
             geojson, name_key, id_key, file["area_type"], all_properties)
 
-        with open(f"./data/geojson/{file_name.split('.')[0]}-adjusted.json", "w", encoding="utf-8") as f:
+        with open(f"./data/geojson/boundaries_{area_type.lower()}.json", "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2, ensure_ascii=False)
             
         
