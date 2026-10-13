@@ -3,7 +3,7 @@ from dataclasses import asdict
 import anthropic
 import pandas as pd
 from dotenv import load_dotenv
-from variables_meta import AGGREGATE_GROUPS, VARIABLES, VARIABLES_PERCENTAGE
+from scripts.demo_data.variables_meta import AGGREGATE_GROUPS, VARIABLES, VARIABLES_PERCENTAGE
 
 load_dotenv() # For Anthropic API key
 ai_client = anthropic.Anthropic()

@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
-from variables_meta import VARIABLES
+from scripts.demo_data.variables_meta import VARIABLES
 
 load_dotenv()
 
