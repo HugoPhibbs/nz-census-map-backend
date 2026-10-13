@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS AREAS(
     area_id TEXT PRIMARY KEY,
     area_name TEXT,
-    area_type TEXT
+    area_type TEXT,
+    bounding_box float8[]
 );
 
 CREATE TABLE IF NOT EXISTS DEMOGRAPHIC_VARIABLES(

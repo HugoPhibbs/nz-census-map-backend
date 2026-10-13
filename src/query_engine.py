@@ -48,7 +48,6 @@ def health_check():
 def all_variable_info():
     return run_query("SELECT * FROM demographic_variables", as_dicts=True)
 
-
 def area_info(area_id: str):
     return run_query(
         "SELECT * FROM areas WHERE area_id = %s", 
@@ -84,6 +83,12 @@ def variable_ids_to_available_years():
 def variable_ids_to_name():
     return dict(run_query("SELECT variable_id, plain_name FROM demographic_variables"))
 
+def area_bounding_box(area_id: str):
+    bounding_box = run_query("SELECT bounding_box FROM areas WHERE area_id = %s", (area_id,), fetch_one=True)
+    if bounding_box is None:
+        return None
+    return bounding_box[0]
+    
 
 def all_variable_ids():
     return [row[0] for row in run_query("SELECT variable_id FROM demographic_variables")]

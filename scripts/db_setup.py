@@ -33,15 +33,18 @@ def fill_areas_table(pool):
     df = pd.read_parquet("./data/db-tables/areas_table.parquet")  # Ensure area_id is read as string to preserve leading zeros
     
     with pool.connection() as conn, conn.cursor() as cur:
-        for area in df.itertuples(index=False):
-            cur.execute(
-                """
-                    INSERT INTO AREAS (area_name, area_id, area_type)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT DO NOTHING
-                    """,
-                (area.area_name, area.area_id, area.area_type)
-            )
+        # executemany batches inserts, so its faster
+        cur.executemany(
+            """
+            INSERT INTO AREAS (area_name, area_id, area_type, bounding_box)
+            VALUES (%s, %s, %s, %s::float8[])
+            ON CONFLICT DO NOTHING
+            """,
+            [
+                (area.area_name, area.area_id, area.area_type, [float(x) for x in area.bounding_box])
+                for area in df.itertuples(index=False)
+            ],
+        )
     
 
 def fill_demographic_data_table(pool):

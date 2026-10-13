@@ -28,6 +28,14 @@ def health_check():
     else:
         return {"status": "broken"}, 503
 
+@app.route("/area/<area_id>/bounding-box")
+@cache.cached()
+def get_area_bounding_box(area_id):
+    result = query_engine.area_bounding_box(area_id)
+    if result is None:
+        return {"error": "Area not found"}, 404
+    
+    return result, 200
 
 @app.route("/area/<area_id>")
 @cache.cached()

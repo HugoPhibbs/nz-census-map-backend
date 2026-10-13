@@ -207,12 +207,10 @@ def create_and_save_variables_table(demo_df):
     years_by_var = demo_df.groupby("variable_id")["census_year"].unique()
     vars_df["available_years"] = vars_df["variable_id"].map(lambda v: sorted(int(y) for y in years_by_var.get(v, [])))
 
-    vars_df.to_csv("data/db-tables/csv-debug/demographic_variables_table.csv", index=False)
     vars_df.to_parquet("data/db-tables/demographic_variables_table.parquet", index=False)
 
 
 def save_demo_df(demo_df):
-    demo_df.to_csv("data/db-tables/csv-debug/demographic_data_table.csv", index=False)
     demo_df.to_parquet("data/db-tables/demographic_data_table.parquet", index=False)
 
 if __name__ == "__main__":    
