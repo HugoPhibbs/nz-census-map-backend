@@ -5,6 +5,14 @@ import subprocess
 
 from dotenv import load_dotenv
 
+from scripts.map_files.build_pmtiles import (
+    AREA_BOUNDARIES_SA1_PATH,
+    AREA_BOUNDARIES_SA2_PATH,
+    AREA_BOUNDARIES_SA3_PATH,
+    AREA_BOUNDARIES_TA_PATH,
+    COMBINED_BASEMAP_PATH,
+)
+
 load_dotenv()
 
 CLOUD_RUN_SERVICES = {
@@ -85,10 +93,16 @@ def create_service_account():
 
 
 def fill_bucket_with_data():
-    files_to_upload = ["nz_basemap.pmtiles", "area_boundaries_sa1.pmtiles", "area_boundaries_sa2_sa3_ta.pmtiles"]
+    files_to_upload = [
+        COMBINED_BASEMAP_PATH,
+        AREA_BOUNDARIES_SA1_PATH,
+        AREA_BOUNDARIES_SA2_PATH,
+        AREA_BOUNDARIES_SA3_PATH,
+        AREA_BOUNDARIES_TA_PATH
+    ]
     for file in files_to_upload:
         upload_cmd = [
-            "gsutil", "cp", f"./data/pmtiles/{file}", f"gs://{os.getenv('BUCKET_NAME')}/{file}"]
+            "gsutil", "cp", f"./data/{file}", f"gs://{os.getenv('BUCKET_NAME')}/{file}"]
         subprocess.run(upload_cmd, check=True, shell=True)
 
 def deploy_cloud_run(service_name):

@@ -12,8 +12,10 @@ BASEMAP_MAINLAND_PATH = format_pmtiles_path("nz_basemap_mainland")
 BASEMAP_CHATHAM_PATH = format_pmtiles_path("nz_basemap_chatham")
 COMBINED_BASEMAP_PATH = format_pmtiles_path("nz_basemap")
 
-AREA_BOUNDARIES_SA2_SA3_TA_PATH = format_pmtiles_path("area_boundaries_sa2_sa3_ta")
 AREA_BOUNDARIES_SA1_PATH = format_pmtiles_path("area_boundaries_sa1")
+AREA_BOUNDARIES_SA2_PATH = format_pmtiles_path("area_boundaries_sa2")
+AREA_BOUNDARIES_SA3_PATH = format_pmtiles_path("area_boundaries_sa3")
+AREA_BOUNDARIES_TA_PATH = format_pmtiles_path("area_boundaries_ta")
 
 GEOJSON_TA_PATH = format_geojson_path("boundaries_ta")
 GEOJSON_SA3_PATH = format_geojson_path("boundaries_sa3")
@@ -67,7 +69,6 @@ def combine_and_filter_basemaps():
         f"-o {COMBINED_BASEMAP_PATH} {BASEMAP_MAINLAND_PATH} {BASEMAP_CHATHAM_PATH}"
     )
 
-
 def combine_geojson_to_pmtiles(
     output_path: str,
     geojson_paths: list[tuple[str, str]]
@@ -82,12 +83,26 @@ def combine_geojson_to_pmtiles(
     )
 
 
-def build_sa2_sa3_pmtiles():
+def build_ta_pmtiles():
     combine_geojson_to_pmtiles(
-        AREA_BOUNDARIES_SA2_SA3_TA_PATH,
+        AREA_BOUNDARIES_TA_PATH,
         [
             ("ta", GEOJSON_TA_PATH),
+        ],
+    )
+    
+def build_sa3_pmtiles():
+    combine_geojson_to_pmtiles(
+        AREA_BOUNDARIES_SA3_PATH,
+        [
             ("sa3", GEOJSON_SA3_PATH),
+        ],
+    )
+    
+def build_sa2_pmtiles():
+    combine_geojson_to_pmtiles(
+        AREA_BOUNDARIES_SA2_PATH,
+        [
             ("sa2", GEOJSON_SA2_PATH),
         ],
     )
@@ -126,9 +141,18 @@ if __name__ == "__main__":
         exit(1)
 
     if args.build_boundary_pmtiles or args.all:
-        build_sa2_sa3_pmtiles()
+        print("Building boundary pmtiles")
+        
+        print("Building TA pmtiles")
+        build_ta_pmtiles()
+        print("Building SA3 pmtiles")
+        build_sa3_pmtiles()
+        print("Building SA2 pmtiles")
+        build_sa2_pmtiles()
+        print("Building SA1 pmtiles")
         build_sa1_pmtiles()
-        print("building boundary pmtiles done")
+        
+        print("Building boundary pmtiles done")
 
     if args.process_basemap_pmtiles or args.all:
         fetch_basemap()
