@@ -97,9 +97,9 @@ def get_bounding_box(geojson_feature):
                 max_lng = max(max_lng, lng)
                 max_lat = max(max_lat, lat)
 
-    round2dp = lambda x: round(x, 4)
+    round4dp = lambda x: round(x, 4)
     
-    return [round2dp(min_lng), round2dp(min_lat), round2dp(max_lng), round2dp(max_lat)]
+    return [round4dp(min_lng), round4dp(min_lat), round4dp(max_lng), round4dp(max_lat)]
 
 def save_bounding_boxes(geojson):
     bounding_boxes = []
