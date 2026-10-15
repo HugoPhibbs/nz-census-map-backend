@@ -10,7 +10,7 @@ from src.utils import get_db_connection_pool
 db_pool = get_db_connection_pool(autocommit=True)
 
 
-def run_query(sql, params=None, *, as_dicts=False, fetch_one=False, time_it=False):
+def run_query(sql, params=None, *, as_dicts=False, fetch_one=False):
     """
     Runs a read query. If Neon has dropped the pool's connections (compute suspended), clears them and retries once.
     """
@@ -26,23 +26,6 @@ def run_query(sql, params=None, *, as_dicts=False, fetch_one=False, time_it=Fals
         # At free tier, Neon drops connections after 5 minutes, so we need to account for this by retrying
         db_pool.check()
         return run()
-
-
-
-def health_check():
-    healthy = True
-    db_ping_time = None
-    
-    try:
-        start = time.perf_counter()
-        run_query("SELECT 1", fetch_one=True)
-        db_ping_time = round((time.perf_counter() - start) * 1000, 2)
-        
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        healthy = False
-
-    return healthy, db_ping_time
 
 
 def all_variable_info():

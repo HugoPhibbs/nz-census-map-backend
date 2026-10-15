@@ -20,7 +20,7 @@ CLOUD_RUN_SERVICES = {
         "name": "nz-census-map-api",
         "command": "api",
         "env": ["DB_CONNECTION_STRING_PROD", "STATS_NZ_API_KEY",
-                "BUCKET_NAME", "FRONTEND_DOMAIN"]
+                "BUCKET_NAME", "FRONTEND_DOMAIN", "REDIS_URL"]
     },
     "mcp": {
         "name": "nz-census-map-mcp",

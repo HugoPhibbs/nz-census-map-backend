@@ -5,6 +5,7 @@ import psycopg
 import psycopg_pool
 from dotenv import load_dotenv
 from psycopg.types.numeric import NumericBinaryLoader, NumericLoader
+import redis
 
 load_dotenv()
 
@@ -43,4 +44,14 @@ def get_db_connection_pool(use_dev=None, autocommit=False):
         min_size=1,
         max_size=10,
         kwargs={"autocommit": autocommit},
+    )
+
+@functools.lru_cache
+def get_redis_connection_pool():
+    return redis.ConnectionPool.from_url(
+        os.getenv("REDIS_URL"), 
+        max_connections = 10,
+        socket_connect_timeout = 3,
+        socket_timeout = 3,
+        health_check_interval = 30,
     )
