@@ -7,6 +7,7 @@ from flask_compress import Compress
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from src import query_engine
 from src.health_check import health_check
@@ -17,6 +18,8 @@ load_dotenv()
 redis_pool = get_redis_connection_pool()
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1)
+
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 app.config["COMPRESS_MIN_SIZE"] = 450
