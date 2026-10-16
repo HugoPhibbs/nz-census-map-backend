@@ -1392,7 +1392,7 @@ requires-dist = [
     { name = "flask-caching", specifier = ">=2.5.1" },
     { name = "flask-compress", specifier = ">=1.25" },
     { name = "flask-cors", specifier = ">=6.0.5" },
-    { name = "flask-limiter", extras = ["redis", "redits"], specifier = ">=4.1.1" },
+    { name = "flask-limiter", extras = ["redis"], specifier = ">=4.1.1" },
     { name = "gunicorn", specifier = ">=26.2.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=2.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
