@@ -16,51 +16,11 @@
         },
         {
             "type": "shell",
-            "label": "deploy-backend",
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "deploy-api",
-                "deploy-mcp"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
-            "label": "deploy-firebase",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
-            "args": [
-                "deploy.py",
-                "--deploy-firebase"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
             "label": "deploy-api",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "deploy.py",
                 "--deploy-api"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
-            "label": "deploy-mcp",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
-            "args": [
-                "deploy.py",
-                "--deploy-mcp"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
-            "label": "run-mcp",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
-            "args": [
-                "-m",   
-                "src.mcp_server"
             ],
             "problemMatcher": []
         },
@@ -73,17 +33,6 @@
                 "start-db",
                 "start-api"
             ]
-        },
-        {
-            "type": "shell",
-            "label": "fill-db",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
-            "args": [
-                "-m",
-                "scripts.db_setup",
-                "--fill"
-            ],
-            "problemMatcher": []
         },
         {
             "type": "shell",
@@ -150,5 +99,45 @@
             ],
             "problemMatcher": []
         },
+        {
+            "type": "shell",
+            "label": "tf-init",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "deploy.py",
+                "--tf-init"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "tf-plan",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "deploy.py",
+                "--tf-plan"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "tf-apply",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "deploy.py",
+                "--tf-apply"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "tf-all",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "deploy.py",
+                "--tf-all"
+            ],
+            "problemMatcher": []
+        }
     ]
 }
