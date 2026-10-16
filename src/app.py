@@ -33,7 +33,8 @@ limiter = Limiter(
     default_limits=["60 per minute"],
     storage_uri = "rediss://",
     storage_options={"connection_pool": redis_pool},
-    strategy="fixed-window", # or "moving-window" or "sliding-window-counter"
+    strategy="fixed-window", 
+    swallow_errors=True
 )
 
 app.json.sort_keys = False  # Disable sorting of keys in JSON responses for better performance
