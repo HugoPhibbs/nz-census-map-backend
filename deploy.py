@@ -20,7 +20,7 @@ CLOUD_RUN_SERVICES = {
         "name": "nz-census-map-api",
         "command": "api",
         "env": ["DB_CONNECTION_STRING_PROD", "STATS_NZ_API_KEY",
-                "BUCKET_NAME", "FRONTEND_DOMAIN"]
+                "BUCKET_NAME", "FRONTEND_DOMAIN", "REDIS_URL"]
     },
     "mcp": {
         "name": "nz-census-map-mcp",
@@ -117,6 +117,7 @@ def deploy_cloud_run(service_name):
         "--region", os.getenv("GCP_REGION"),
         "--cpu-boost",
         "--min-instances=1",
+        "--max-instances=5",
         "--allow-unauthenticated",
         "--service-account", f"{os.getenv('API_SA_NAME')}@{os.getenv('PROJECT_ID')}.iam.gserviceaccount.com",
         '--command=""', # Leave empty to run entrypoint.sh

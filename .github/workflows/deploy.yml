@@ -29,6 +29,7 @@ jobs:
         env:
           DB_CONNECTION_STRING_PROD: ${{ secrets.DB_CONNECTION_STRING_PROD }}
           STATS_NZ_API_KEY: ${{ secrets.STATS_NZ_API_KEY }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
           BUCKET_NAME: ${{ vars.BUCKET_NAME }}
           FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
           GCP_REGION: ${{ vars.GCP_REGION }}

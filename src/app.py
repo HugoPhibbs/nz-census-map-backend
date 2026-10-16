@@ -5,12 +5,21 @@ from flask import Flask, request
 from flask_caching import Cache
 from flask_compress import Compress
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from src import query_engine
+from src.health_check import health_check
+from src.utils import get_redis_connection_pool
 
 load_dotenv()
 
+redis_pool = get_redis_connection_pool()
+
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
 app.config["COMPRESS_MIN_SIZE"] = 450
@@ -18,15 +27,27 @@ compress = Compress(app)
 
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
 
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["60 per minute"],
+    storage_uri = "rediss://",
+    storage_options={"connection_pool": redis_pool},
+    strategy="fixed-window", 
+    swallow_errors=True
+)
+
 app.json.sort_keys = False  # Disable sorting of keys in JSON responses for better performance
+    
 
 @app.route("/health")
-def health_check():
-    healthy, db_ping_time = query_engine.health_check()
-    if healthy and db_ping_time is not None:
-        return {"status": "ok", "db_ping_time_ms": db_ping_time}, 200
+def get_health():
+    healthy, db_ping_time, redis_ping_time = health_check()
+    if healthy and db_ping_time is not None and redis_ping_time is not None:
+        return {"status": "ok", "db_ping_time_ms": db_ping_time, "redis_ping_time_ms": redis_ping_time}, 200
     else:
         return {"status": "broken"}, 503
+
 
 @app.route("/area/<area_id>/bounding-box")
 @cache.cached()

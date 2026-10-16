@@ -22,6 +22,7 @@ jobs:
         env:
           DB_CONNECTION_STRING_PROD: ${{ secrets.DB_CONNECTION_STRING_PROD }}
           STATS_NZ_API_KEY: ${{ secrets.STATS_NZ_API_KEY }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
           BUCKET_NAME: ${{ vars.BUCKET_NAME }}
           FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
           GCP_REGION: ${{ vars.GCP_REGION }}
@@ -30,7 +31,7 @@ jobs:
         run: >
           docker run -d -p 8080:8080
           -e DB_CONNECTION_STRING_PROD -e STATS_NZ_API_KEY -e BUCKET_NAME
-          -e FRONTEND_DOMAIN -e GCP_REGION -e API_SA_NAME -e PROJECT_ID
+          -e FRONTEND_DOMAIN -e GCP_REGION -e API_SA_NAME -e PROJECT_ID -e REDIS_URL
           api:latest api
 
       - name: API Health Check
