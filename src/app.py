@@ -43,7 +43,7 @@ app.json.sort_keys = False  # Disable sorting of keys in JSON responses for bett
 @app.route("/health")
 def get_health():
     healthy, db_ping_time, redis_ping_time = health_check()
-    if healthy and db_ping_time is not None:
+    if healthy and db_ping_time is not None and redis_ping_time is not None:
         return {"status": "ok", "db_ping_time_ms": db_ping_time, "redis_ping_time_ms": redis_ping_time}, 200
     else:
         return {"status": "broken"}, 503
