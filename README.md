@@ -2,6 +2,7 @@
 
 ![Tests](https://github.com/HugoPhibbs/nz-census-map-backend/actions/workflows/tests.yml/badge.svg)
 ![Deployment](https://github.com/HugoPhibbs/nz-census-map-backend/actions/workflows/deploy.yml/badge.svg)
+![API Health](https://github.com/HugoPhibbs/nz-census-map-backend/actions/workflows/healthcheck.yml/badge.svg)
 
 _Main repository: [nz-census-map](https://github.com/HugoPhibbs/nz-census-map)_
 
