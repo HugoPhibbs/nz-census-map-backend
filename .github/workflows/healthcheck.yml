@@ -1,0 +1,12 @@
+name: API Healthcheck
+
+on:
+  schedule:
+    - cron: '17 * * * *' # Runs every hour
+  workflow_dispatch: # So it can be run manually
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --max-time 10 "${{ vars.CLOUD_RUN_API_URL }}/health"
