@@ -18,7 +18,7 @@ load_dotenv()
 redis_pool = get_redis_connection_pool()
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_host=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 CORS(app, origins=["http://localhost:3000", os.getenv("FRONTEND_DOMAIN")])
 
