@@ -86,7 +86,7 @@ def tf_env():
 
 
 def tf_plan(no_input: bool):
-    plan_cmd = ["terraform", "-chdir=terraform", "plan"]
+    plan_cmd = ["terraform", "-chdir=terraform", "plan", "-lock-timeout=5m"]
     
     if no_input:
         plan_cmd.append("-input=false")
@@ -95,7 +95,7 @@ def tf_plan(no_input: bool):
 
 
 def tf_apply(no_input: bool):
-    apply_cmd = ["terraform", "-chdir=terraform", "apply"]
+    apply_cmd = ["terraform", "-chdir=terraform", "apply", "-lock-timeout=5m"]
     
     if no_input:
         apply_cmd.extend(["-auto-approve", "-input=false"])
