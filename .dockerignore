@@ -8,7 +8,11 @@ docs
 .github
 README.md
 *.pyc
-.md
+*.md
 deploy
 terraform/*
 *tfstate*
+.gcloudignore
+.git
+.gitignore
+.gitattributes
