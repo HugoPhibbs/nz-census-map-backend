@@ -16,11 +16,11 @@
         },
         {
             "type": "shell",
-            "label": "deploy-api",
+            "label": "update-api",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "deploy.py",
-                "--deploy-api"
+                "--update-api"
             ],
             "problemMatcher": []
         },

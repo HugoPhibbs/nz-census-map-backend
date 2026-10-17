@@ -12,3 +12,6 @@ README.md
 deploy
 .terraform
 *tfstate*
+terraform.tfplan
+terraform/.terraform
+hashicorp

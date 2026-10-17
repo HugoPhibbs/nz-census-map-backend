@@ -21,3 +21,6 @@ def fill_bucket_with_data():
         upload_cmd = [
             "gsutil", "cp", f"./data/{file}", f"gs://{os.environ['BUCKET_NAME']}/{file}"]
         subprocess.run(upload_cmd, check=True)
+        
+if __name__ == "__main__":
+    fill_bucket_with_data()
