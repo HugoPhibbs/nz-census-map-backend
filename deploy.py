@@ -228,9 +228,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--tf-all",
+        "--tf-init-apply",
         action="store_true",
-        help="Run all terraform steps (init, plan, apply)",
+        help="Run terraform init and apply",
     )
 
     parser.add_argument("--tf-init", action="store_true", help="Run terraform init")
@@ -244,13 +244,13 @@ if __name__ == "__main__":
     if args.create_tf_backend_bucket:
         create_tf_backend_bucket()
 
-    if args.tf_init or args.tf_all:
+    if args.tf_init or args.tf_init_apply:
         tf_init(no_input=args.no_input)
 
-    if args.tf_plan or args.tf_all:
+    if args.tf_plan:
         tf_plan(no_input=args.no_input)
 
-    if args.tf_apply or args.tf_all:
+    if args.tf_apply or args.tf_init_apply:
         tf_apply(no_input=args.no_input)
 
     if args.update_api:

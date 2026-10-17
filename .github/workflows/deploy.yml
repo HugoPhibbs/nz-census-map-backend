@@ -48,9 +48,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: python deploy.py --tf-init --tf-plan --no-input
 
-      - name: Deploy (Terraform)
+      - name: Terraform init and apply
         if: github.event_name == 'push'
-        run: python deploy.py --tf-all --no-input
+        run: python deploy.py --tf-init-apply --no-input
 
       - name: Update API (Cloud Run)
         if : github.event_name == 'push'

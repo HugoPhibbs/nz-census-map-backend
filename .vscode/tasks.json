@@ -131,11 +131,11 @@
         },
         {
             "type": "shell",
-            "label": "tf-all",
+            "label": "tf-init-apply",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
                 "deploy.py",
-                "--tf-all"
+                "--tf-init-apply"
             ],
             "problemMatcher": []
         }
