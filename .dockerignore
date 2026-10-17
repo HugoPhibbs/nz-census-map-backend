@@ -10,8 +10,5 @@ README.md
 *.pyc
 .md
 deploy
-.terraform
+terraform/*
 *tfstate*
-terraform.tfplan
-terraform/.terraform
-hashicorp
