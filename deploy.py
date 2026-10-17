@@ -69,6 +69,7 @@ def tf_env():
         ("project_id", "PROJECT_ID"),
         ("gcp_region", "GCP_REGION"),
         ("redis_url", "REDIS_URL"),
+        ("bucket_name", "BUCKET_NAME"),
         ("stats_nz_api_key", "STATS_NZ_API_KEY"),
         ("frontend_domain", "FRONTEND_DOMAIN"),
         ("db_connection_string_prod", "DB_CONNECTION_STRING_PROD"),
