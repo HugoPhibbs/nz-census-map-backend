@@ -1,5 +1,2 @@
 #!include:.gitignore
 #!include:.dockerignore
-
-.git
-.gitignore

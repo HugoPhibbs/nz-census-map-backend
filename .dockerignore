@@ -13,3 +13,6 @@ deploy
 terraform/*
 *tfstate*
 .gcloudignore
+.git
+.gitignore
+.gitattributes
