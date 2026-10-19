@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+import redis
 from dotenv import load_dotenv
 from flask import Flask, request
 from flask_caching import Cache
@@ -30,9 +31,11 @@ cache = Cache(
     app,
     config={
         "CACHE_TYPE": "RedisCache",
-        "CACHE_REDIS_URL": os.environ["REDIS_URL"],
+        "CACHE_REDIS_HOST": redis.Redis(connection_pool=redis_pool),
         "CACHE_DEFAULT_TIMEOUT": 300,
-    },
+        "CACHE_IGNORE_ERRORS": True,
+        "CACHE_KEY_PREFIX": os.getenv("K_REVISION", "local") # K_REVISION is set by GCP in Cloud Run
+   },
 )
 
 limiter = Limiter(
