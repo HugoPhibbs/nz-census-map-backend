@@ -178,11 +178,16 @@ resource "google_sql_database_instance" "api_db" {
   database_version = "POSTGRES_18"
   region           = var.gcp_region
   depends_on       = [google_project_service.sqladmin]
+  deletion_protection = true 
 
   settings {
     tier    = "db-g1-small"
     edition = "ENTERPRISE"
+    deletion_protection_enabled = true
 
+    # Only allow connections via the GCP SQL Proxy
+    connector_enforcement = "REQUIRED"
+    
     backup_configuration {
       enabled = true
     }
