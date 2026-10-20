@@ -1,18 +1,9 @@
 import argparse
 import io
-import subprocess
 
 import pandas as pd
 
 from src.utils import get_db_connection_pool
-
-
-def start_dev_db():
-    subprocess.run(["docker", "compose", "up", "-d"], cwd="./scripts/db", check=True)
-
-def stop_dev_db(reset=False):
-    down_cmd = ["docker", "compose", "down", "-v"] if reset else ["docker", "compose", "down"]
-    subprocess.run(down_cmd, cwd="./scripts/db", check=True)
     
 def fill_variables_table(pool):
     variables_df = pd.read_parquet("./data/db-tables/demographic_variables_table.parquet")
@@ -78,7 +69,7 @@ def fill_demographic_data_table(pool):
             """)
 
         conn.commit()
-        
+
 def refresh_materialized_views(pool):
     with pool.connection() as conn:
         with conn.cursor() as cur:
@@ -92,7 +83,7 @@ def fill_tables(pool):
     refresh_materialized_views(pool)
 
 def create_tables_prod():
-    pool = get_db_connection_pool(use_dev=False)
+    pool = get_db_connection_pool()
     with pool.connection() as conn:
         with conn.cursor() as cur:
             with open("./scripts/db/create_tables.sql", "r") as f:
@@ -100,27 +91,16 @@ def create_tables_prod():
         conn.commit()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Set up the database using Docker Compose.")
-    
-    parser.add_argument("--start-dev", default=False, action="store_true", help="Create the database using Docker Compose.")
-    parser.add_argument("--stop-dev", default=False, action="store_true", help="Drop the database using Docker Compose.")
-    parser.add_argument("--reset-dev", "-rv", default=False, action="store_true", help="Reset the database by stopping, starting, and filling it.")
-    parser.add_argument("--fill-dev", default=False, action="store_true", help="Fill the database tables with data.")
+    parser = argparse.ArgumentParser(description="Set up the database")
     
     parser.add_argument("--init-prod", default=False, action="store_true", help="Create the production database tables.")
     parser.add_argument("--fill-prod", default=False, action="store_true", help="Fill the database tables with data.")
     
     args = parser.parse_args()
     
-    if args.stop_dev or args.reset_dev:
-        stop_dev_db(args.reset_dev)
-    elif args.start_dev:
-        start_dev_db()
-    elif args.init_prod:
+    if args.init_prod:
         create_tables_prod()
-    elif args.fill_dev:
-        fill_tables(get_db_connection_pool(use_dev=True))
     elif args.fill_prod:
-        fill_tables(get_db_connection_pool(use_dev=False))
+        fill_tables(get_db_connection_pool())
     else:
-        print("No action specified. Use --start, --stop, --fill, or --reset-vols.")
+        print("No action specified. Use --help for more information.")

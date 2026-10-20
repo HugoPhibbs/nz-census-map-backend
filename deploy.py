@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 import time
+from pathlib import Path
+
 import requests
 
 from dotenv import load_dotenv
@@ -11,9 +13,13 @@ load_dotenv()
 
 use_shell = os.name == "nt"
 
+TF_VARS = json.loads(
+    (Path(__file__).parent / "terraform" / "prod.auto.tfvars.json").read_text()
+)
+
 
 def create_tf_backend_bucket():
-    bucket_url = f"gs://{os.environ['PROJECT_ID']}-terraform-state"
+    bucket_url = f"gs://{TF_VARS['project_id']}-terraform-state"
 
     bucket_exists = (
         subprocess.run(
@@ -37,9 +43,9 @@ def create_tf_backend_bucket():
         "create",
         bucket_url,
         "--location",
-        os.environ["GCP_REGION"],
+        TF_VARS["gcp_region"],
         "--project",
-        os.environ["PROJECT_ID"],
+        TF_VARS["project_id"],
         "--uniform-bucket-level-access",
     ]
     subprocess.run(create_bucket_cmd, check=True, shell=use_shell)
@@ -65,21 +71,13 @@ def tf_init(no_input: bool):
 
 
 def tf_env():
-    var_pairs = [
-        ("project_id", "PROJECT_ID"),
-        ("gcp_region", "GCP_REGION"),
+    secret_pairs = [
         ("redis_url", "REDIS_URL"),
-        ("bucket_name", "BUCKET_NAME"),
-        ("stats_nz_api_key", "STATS_NZ_API_KEY"),
-        ("frontend_domain", "FRONTEND_DOMAIN"),
-        ("db_connection_string_prod", "DB_CONNECTION_STRING_PROD"),
-        ("firebase_hostsite_id", "FIREBASE_HOSTSITE_ID"),
-        ("cloud_run_service_name", "CLOUD_RUN_SERVICE_NAME"),
-        ("api_sa_name", "API_SA_NAME"),
+        ("db_password", "DB_PASSWORD"),
     ]
 
     tf_env = os.environ.copy()
-    for name, env_key in var_pairs:
+    for name, env_key in secret_pairs:
         tf_env[f"TF_VAR_{name}"] = os.environ[env_key]
 
     return tf_env
@@ -130,9 +128,9 @@ def update_api():
         "run",
         "services",
         "describe",
-        os.environ["CLOUD_RUN_SERVICE_NAME"],
+        TF_VARS["cloud_run_service_name"],
         "--region",
-        os.environ["GCP_REGION"],
+        TF_VARS["gcp_region"],
         "--format=json",
     ]
     exists = (
@@ -144,18 +142,18 @@ def update_api():
 
     if not exists:
         raise RuntimeError(
-            f"Cloud Run service {os.environ['CLOUD_RUN_SERVICE_NAME']} does not exist. Please run terraform apply first."
+            f"Cloud Run service {TF_VARS['cloud_run_service_name']} does not exist. Please run terraform apply first."
         )
 
     deploy_cmd = [
         "gcloud",
         "run",
         "deploy",
-        os.environ["CLOUD_RUN_SERVICE_NAME"],
+        TF_VARS["cloud_run_service_name"],
         "--source",
         ".",
         "--region",
-        os.environ["GCP_REGION"],
+        TF_VARS["gcp_region"],
         "--tag",
         "candidate",
         "--quiet",
@@ -169,9 +167,9 @@ def update_api():
         "run",
         "services",
         "describe",
-        os.environ["CLOUD_RUN_SERVICE_NAME"],
+        TF_VARS["cloud_run_service_name"],
         "--region",
-        os.environ["GCP_REGION"],
+        TF_VARS["gcp_region"],
         "--format=json",
     ]
     service = json.loads(
@@ -197,11 +195,11 @@ def update_api():
         "run",
         "services",
         "update-traffic",
-        os.environ["CLOUD_RUN_SERVICE_NAME"],
+        TF_VARS["cloud_run_service_name"],
         "--to-revisions",
         f"{revision_name}=100",
         "--region",
-        os.environ["GCP_REGION"],
+        TF_VARS["gcp_region"],
     ]
     subprocess.run(update_traffic_cmd, check=True, shell=use_shell)
 
