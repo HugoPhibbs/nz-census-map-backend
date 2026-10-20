@@ -27,22 +27,19 @@ class IntOrFloatNumericBinaryLoader(NumericBinaryLoader):
         return normalize_numeric(super().load(data))
 
 @functools.lru_cache
-def get_db_connection_pool(use_dev=None, autocommit=False):
+def get_db_connection_pool(autocommit=False):
     psycopg.adapters.register_loader("numeric", IntOrFloatNumericLoader)
     psycopg.adapters.register_loader("numeric", IntOrFloatNumericBinaryLoader)
 
-    if use_dev is None:
-        use_dev = os.getenv("USE_DEV_DB", "false").lower() == "true"
-
-    if use_dev:
-        conn_info = f"dbname={os.getenv('DB_NAME_DEV')} user={os.getenv('DB_USER_DEV')} password={os.getenv('DB_PASSWORD_DEV')} host={os.getenv('DB_HOST_DEV')} port={os.getenv('DB_PORT_DEV')}"
-    else:
-        conn_info = os.getenv("DB_CONNECTION_STRING_PROD")
-        if not conn_info:
-            raise ValueError("DB_CONNECTION_STRING_PROD environment variable is not set.")
+    conninfo = psycopg.conninfo.make_conninfo(
+        dbname=os.environ["DB_NAME"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        host=os.environ["DB_HOST"]
+    )
 
     return psycopg_pool.ConnectionPool(
-        conninfo=conn_info,
+        conninfo=conninfo,
         min_size=1,
         max_size=10,
         kwargs={"autocommit": autocommit},
