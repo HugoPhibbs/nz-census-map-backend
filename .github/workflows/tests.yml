@@ -12,6 +12,29 @@ on:
 jobs:
   docker-api-build-and-serve:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
     
@@ -19,19 +42,12 @@ jobs:
         run: docker build -t api:latest .
 
       - name: API Serve (run container)
-        env:
-          DB_CONNECTION_STRING_PROD: ${{ secrets.DB_CONNECTION_STRING_PROD }}
-          STATS_NZ_API_KEY: ${{ secrets.STATS_NZ_API_KEY }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
-          BUCKET_NAME: ${{ vars.BUCKET_NAME }}
-          FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
-          GCP_REGION: ${{ vars.GCP_REGION }}
-          API_SA_NAME: ${{ vars.API_SA_NAME }}
-          PROJECT_ID: ${{ vars.PROJECT_ID }}
+
         run: >
-          docker run -d -p 8080:8080
-          -e DB_CONNECTION_STRING_PROD -e STATS_NZ_API_KEY -e BUCKET_NAME
-          -e FRONTEND_DOMAIN -e GCP_REGION -e API_SA_NAME -e PROJECT_ID -e REDIS_URL
+          docker run -d --network host
+          -e DB_HOST=localhost -e DB_NAME=postgres -e DB_USER=postgres -e DB_PASSWORD=password
+          -e REDIS_URL=redis://localhost:6379
+          -e FRONTEND_DOMAIN=https://nz-census-map.com
           api:latest api
 
       - name: API Health Check
