@@ -138,6 +138,13 @@
                 "--tf-init-apply"
             ],
             "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "use-gcp-sql-proxy", 
+            "command": "cloud-sql-proxy nz-census-map:europe-west2:nz-census-map-db",
+            "isBackground": true,
+            "problemMatcher": []
         }
     ]
 }
