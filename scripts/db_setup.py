@@ -1,6 +1,5 @@
 import argparse
 import io
-import time
 
 import pandas as pd
 
@@ -91,10 +90,8 @@ def create_tables_prod():
                 cur.execute(f.read())
         conn.commit()
 
-    return pool
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Set up the database using Docker Compose.")
+    parser = argparse.ArgumentParser(description="Set up the database")
     
     parser.add_argument("--init-prod", default=False, action="store_true", help="Create the production database tables.")
     parser.add_argument("--fill-prod", default=False, action="store_true", help="Fill the database tables with data.")
@@ -102,8 +99,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.init_prod:
-        pool = create_tables_prod()
+        create_tables_prod()
     elif args.fill_prod:
         fill_tables(get_db_connection_pool())
     else:
-        print("No action specified. Use --start, --stop, --fill, or --reset-vols.")
+        print("No action specified. Use --help for more information.")

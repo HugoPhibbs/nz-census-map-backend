@@ -10,6 +10,7 @@ on:
 
 
 jobs:
+  # Just check that the container boots up and connects to dummy SQL and Redis DBs
   docker-api-build-and-serve:
     runs-on: ubuntu-latest
     services:
