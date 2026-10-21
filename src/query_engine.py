@@ -20,7 +20,10 @@ def run_query(sql, params=None, *, as_dicts=False, fetch_one=False):
             return cur.fetchone() if fetch_one else cur.fetchall()
 
     try:
-        return run()
+        start = time.perf_counter()
+        res = run()
+        print(f"Query took {(time.perf_counter() - start) * 1000:.2f} ms")
+        return res
     except psycopg.OperationalError:
         # Catching OperationalError is a bit broad (includes PoolTimeout, QueryCanceled), but we can ignore for the scale of this project
         # At free tier, Neon drops connections after 5 minutes, so we need to account for this by retrying
