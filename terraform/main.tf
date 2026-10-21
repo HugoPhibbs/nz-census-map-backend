@@ -283,10 +283,31 @@ resource "google_compute_firewall" "allow_redis_iap" {
   }
 }
 
+resource "google_compute_router" "backend_router" {
+  name    = "nz-census-map-backend-router"
+  region  = var.gcp_region
+  network = google_compute_network.backend_vpc.id
+}
+
+resource "google_compute_router_nat" "backend_nat" {
+  name   = "nz-census-map-backend-nat"
+  router = google_compute_router.backend_router.name
+  region = var.gcp_region
+
+  nat_ip_allocate_option = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
+
+  subnetwork {
+    name                    = google_compute_subnetwork.backend_vpc_subnet.id
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
+}
+
 resource "google_compute_instance" "redis_instance" {
   name         = "${var.redis_vm_name}"
   machine_type = "e2-micro"
   zone         = "${var.gcp_region}-${var.redis_vm_zone}"
+  depends_on = [google_compute_router_nat.backend_nat]
 
   boot_disk {
     initialize_params {
@@ -297,7 +318,6 @@ resource "google_compute_instance" "redis_instance" {
   network_interface {
     subnetwork = google_compute_subnetwork.backend_vpc_subnet.id
     network_ip = local.redis_ip
-    access_config {} # Public IP
   }
 
   metadata = {
