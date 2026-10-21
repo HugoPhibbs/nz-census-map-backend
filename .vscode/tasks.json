@@ -41,7 +41,7 @@
             "args": [
                 "-m",
                 "scripts.db_setup",
-                "--init-prod",
+                "--init-prod"
             ],
             "problemMatcher": []
         },
@@ -52,7 +52,7 @@
             "args": [
                 "-m",
                 "scripts.db_setup",
-                "--fill-prod",
+                "--fill-prod"
             ],
             "problemMatcher": []
         },
@@ -141,9 +141,25 @@
         },
         {
             "type": "shell",
-            "label": "use-gcp-sql-proxy", 
+            "label": "use-gcp-sql-proxy",
             "command": "cloud-sql-proxy nz-census-map:europe-west2:nz-census-map-db",
             "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "gcloud-start-redis-tunnel",
+            "command": "gcloud compute start-iap-tunnel nz-census-map-redis 6379 --local-host-port=localhost:6379 --zone=europe-west2-b",
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "type": "shell",
+            "label": "gcloud-open-redis-and-sql",
+            "dependsOn": [
+                "gcloud-start-redis-tunnel",
+                "use-gcp-sql-proxy"
+            ],
             "problemMatcher": []
         }
     ]

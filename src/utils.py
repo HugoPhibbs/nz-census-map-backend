@@ -47,11 +47,11 @@ def get_db_connection_pool(autocommit=False):
 
 @functools.lru_cache
 def get_redis_connection_pool():
-    if not (redis_url := os.getenv("REDIS_URL")):
-        raise ValueError("REDIS_URL environment variable is not set.")
     try:
-        return redis.ConnectionPool.from_url(
-            redis_url, 
+        return redis.ConnectionPool(
+            host=os.environ['REDIS_HOST'],
+            port=6379,
+            password=os.environ['REDIS_PASSWORD'],
             max_connections = 10,
             socket_connect_timeout = 3,
             socket_timeout = 3,

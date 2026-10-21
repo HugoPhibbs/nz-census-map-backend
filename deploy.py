@@ -72,7 +72,7 @@ def tf_init(no_input: bool):
 
 def tf_env():
     secret_pairs = [
-        ("redis_url", "REDIS_URL"),
+        ("redis_password", "REDIS_PASSWORD"),
         ("db_password", "DB_PASSWORD"),
     ]
 
@@ -119,6 +119,18 @@ def api_health_check(url):
             print(f"Attempt {attempt + 1}: API health check failed with error: {e}")
         time.sleep(2)
     return False
+
+def restart_redis_vm():
+    restart_cmd = [
+        "gcloud",
+        "compute",
+        "instances",
+        "reset",
+        TF_VARS["redis_vm_name"],
+        "--zone",
+        f"{TF_VARS['gcp_region']}-{TF_VARS['redis_vm_zone']}",
+    ]
+    subprocess.run(restart_cmd, check=True, shell=use_shell)
 
 
 def update_api():
@@ -231,6 +243,8 @@ if __name__ == "__main__":
         help="Run terraform init and apply",
     )
 
+    parser.add_argument("--restart-redis", action="store_true", help="Restart the Redis VM")
+
     parser.add_argument("--tf-init", action="store_true", help="Run terraform init")
 
     parser.add_argument("--tf-plan", action="store_true", help="Run terraform plan")
@@ -253,3 +267,6 @@ if __name__ == "__main__":
 
     if args.update_api:
         update_api()
+
+    if args.restart_redis:
+        restart_redis_vm()
