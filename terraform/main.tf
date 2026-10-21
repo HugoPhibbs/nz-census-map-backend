@@ -70,11 +70,6 @@ resource "google_storage_bucket_iam_member" "bucket_iam_member" {
 
 ### Backend API
 
-variable "redis_url" {
-  type      = string
-  sensitive = true
-}
-
 variable "cloud_run_service_name" {
   type = string
 }
@@ -103,6 +98,13 @@ resource "google_cloud_run_v2_service" "api" {
       cloud_sql_instance {
         instances = [google_sql_database_instance.api_db.connection_name]
       }
+    }
+
+    vpc_access {
+      network_interfaces {
+        subnetwork = google_compute_subnetwork.backend_vpc_subnet.id
+      }
+      egress     = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -144,8 +146,13 @@ resource "google_cloud_run_v2_service" "api" {
       }
 
       env {
-        name  = "REDIS_URL"
-        value = var.redis_url
+        name  = "REDIS_HOST"
+        value = local.redis_ip
+      }
+
+      env {
+        name  = "REDIS_PASSWORD"
+        value = var.redis_password
       }
     }
   }
@@ -169,25 +176,25 @@ variable "db_password" {
 }
 
 resource "google_project_service" "sqladmin" {
-  service = "sqladmin.googleapis.com"
+  service            = "sqladmin.googleapis.com"
   disable_on_destroy = false
 }
 
 resource "google_sql_database_instance" "api_db" {
-  name             = local.db_server_name
-  database_version = "POSTGRES_18"
-  region           = var.gcp_region
-  depends_on       = [google_project_service.sqladmin]
-  deletion_protection = true 
+  name                = local.db_server_name
+  database_version    = "POSTGRES_18"
+  region              = var.gcp_region
+  depends_on          = [google_project_service.sqladmin]
+  deletion_protection = true
 
   settings {
-    tier    = "db-g1-small"
-    edition = "ENTERPRISE"
+    tier                        = "db-g1-small"
+    edition                     = "ENTERPRISE"
     deletion_protection_enabled = true
 
     # Only allow connections via the GCP SQL Proxy
     connector_enforcement = "REQUIRED"
-    
+
     backup_configuration {
       enabled = true
     }
@@ -216,6 +223,113 @@ resource "google_project_iam_member" "api_sa_cloud_sql" {
     expression  = "resource.name == \"projects/${var.project_id}/instances/${google_sql_database_instance.api_db.name}\""
   }
 }
+
+### Redis instance
+variable "redis_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "redis_vm_zone" {
+  type = string
+}
+
+variable "redis_vm_name" {
+  type    = string
+}
+
+locals {
+  redis_ip = "10.10.0.100"
+  redis_max_memory = "128mb"
+}
+
+resource "google_project_service" "compute" {
+  service            = "compute.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_compute_network" "backend_vpc" {
+  name                    = "nz-census-map-backend-vpc"
+  auto_create_subnetworks = false
+  depends_on              = [google_project_service.compute]
+}
+
+resource "google_compute_subnetwork" "backend_vpc_subnet" {
+  name          = "nz-census-map-backend-subnet"
+  ip_cidr_range = "10.10.0.0/24" # From 10.10.0.0 to 10.10.0.255
+  region        = var.gcp_region
+  network       = google_compute_network.backend_vpc.id
+}
+
+resource "google_compute_firewall" "allow_redis" {
+  name    = "allow-redis"
+  network = google_compute_network.backend_vpc.name
+  source_ranges = [google_compute_subnetwork.backend_vpc_subnet.ip_cidr_range] 
+
+  allow {
+    protocol = "tcp"
+    ports    = ["6379"]
+  }
+}
+
+resource "google_compute_firewall" "allow_redis_iap" {
+  name    = "allow-redis-iap"
+  network = google_compute_network.backend_vpc.name
+  source_ranges = ["35.235.240.0/20"] # Google IAP TCP forwarding range
+
+  allow {
+    protocol = "tcp"
+    ports    = ["6379"]
+  }
+}
+
+resource "google_compute_router" "backend_router" {
+  name    = "nz-census-map-backend-router"
+  region  = var.gcp_region
+  network = google_compute_network.backend_vpc.id
+}
+
+resource "google_compute_router_nat" "backend_nat" {
+  name   = "nz-census-map-backend-nat"
+  router = google_compute_router.backend_router.name
+  region = var.gcp_region
+
+  nat_ip_allocate_option = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
+
+  subnetwork {
+    name                    = google_compute_subnetwork.backend_vpc_subnet.id
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
+}
+
+resource "google_compute_instance" "redis_instance" {
+  name         = "${var.redis_vm_name}"
+  machine_type = "e2-micro"
+  zone         = "${var.gcp_region}-${var.redis_vm_zone}"
+  depends_on = [google_compute_router_nat.backend_nat]
+
+  boot_disk {
+    initialize_params {
+      image = "cos-cloud/cos-stable"
+    }
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.backend_vpc_subnet.id
+    network_ip = local.redis_ip
+  }
+
+  metadata = {
+    startup-script = <<-EOT
+      #!/bin/bash
+      docker rm -f redis
+      docker run -d --name redis --restart=always -p 6379:6379 redis:7.4-alpine \
+        redis-server --requirepass "${var.redis_password}" --maxmemory ${local.redis_max_memory} --maxmemory-policy allkeys-lru
+    EOT
+  }
+}
+
 
 ### Firebase host for API
 resource "google_firebase_hosting_site" "api_host_site" {
