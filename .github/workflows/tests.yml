@@ -47,7 +47,7 @@ jobs:
         run: >
           docker run -d --network host
           -e DB_HOST=localhost -e DB_NAME=postgres -e DB_USER=postgres -e DB_PASSWORD=password
-          -e REDIS_URL=redis://localhost:6379
+          -e REDIS_HOST=localhost -e REDIS_PASSWORD=""
           -e FRONTEND_DOMAIN=https://nz-census-map.com
           api:latest api
 
