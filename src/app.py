@@ -1,11 +1,7 @@
 import os
-from typing import List
 
-import redis
 from dotenv import load_dotenv
 from flask import Flask, request
-from flask_caching import Cache
-from flask_compress import Compress
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -14,6 +10,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from src import query_engine
 from src.health_check import health_check
 from src.utils import get_redis_connection_pool
+from src.cached_response import cached_response
 
 load_dotenv()
 
@@ -23,20 +20,6 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 CORS(app, origins=["http://localhost:3000", os.environ["FRONTEND_DOMAIN"]])
-
-app.config["COMPRESS_MIN_SIZE"] = 450
-compress = Compress(app)
-
-cache = Cache(
-    app,
-    config={
-        "CACHE_TYPE": "RedisCache",
-        "CACHE_REDIS_HOST": redis.Redis(connection_pool=redis_pool),
-        "CACHE_DEFAULT_TIMEOUT": 300,
-        "CACHE_IGNORE_ERRORS": True,
-        "CACHE_KEY_PREFIX": os.getenv("K_REVISION", "local") # K_REVISION is set by GCP in Cloud Run
-   },
-)
 
 limiter = Limiter(
     app=app,
@@ -67,7 +50,7 @@ def get_health():
 
 
 @app.route("/area/<area_id>/bounding-box")
-@cache.cached()
+@cached_response()
 def get_area_bounding_box(area_id):
     result = query_engine.area_bounding_box(area_id)
     if result is None:
@@ -77,7 +60,7 @@ def get_area_bounding_box(area_id):
 
 
 @app.route("/area/<area_id>")
-@cache.cached()
+@cached_response()
 def get_area_info(area_id):
     result = query_engine.area_info(area_id)
 
@@ -88,7 +71,7 @@ def get_area_info(area_id):
 
 
 @app.route("/stats/area/<area_id>/<int:census_year>")
-@cache.cached()
+@cached_response(compress=True)
 def get_area_stats(area_id, census_year):
     result = query_engine.area_stats(census_year, area_id)
 
@@ -101,7 +84,7 @@ def get_area_stats(area_id, census_year):
 
 
 @app.route("/stats/variable/avgs/<int:census_year>")
-@cache.cached(timeout=3600)
+@cached_response(compress=True)
 def get_variable_avgs(census_year):
     result = query_engine.variable_averages(census_year)
 
@@ -112,35 +95,35 @@ def get_variable_avgs(census_year):
 
 
 @app.route("/stats/variable/ids/to-unit")
-@cache.cached()
+@cached_response(compress=True)
 def get_variable_ids_to_unit():
     result = query_engine.variable_ids_to_unit()
     return result, 200
 
 
 @app.route("/stats/variable/ids/to-name")
-@cache.cached()
+@cached_response(compress=True)
 def get_variable_ids_to_name():
     result = query_engine.variable_ids_to_name()
     return result, 200
 
 
 @app.route("/stats/variable/ids/to-available-years")
-@cache.cached()
+@cached_response(compress=True)
 def get_variable_ids_to_available_years():
     result = query_engine.variable_ids_to_available_years()
     return result, 200
 
 
 @app.route("/stats/variable/ids")
-@cache.cached()
+@cached_response(compress=True)
 def get_all_variables():
     result = query_engine.all_variable_ids()
     return result, 200
 
 
 @app.route("/stats/variable/<variable_id>/compare")
-@cache.cached(response_hit_indication=True, query_string=True)
+@cached_response(compress=True, query_string=True)
 def get_variable_compare(variable_id):
     year_from = request.args.get("from", type=int)
     year_to = request.args.get("to", type=int)
@@ -165,7 +148,7 @@ def get_variable_compare(variable_id):
 
 
 @app.route("/stats/variable/<variable_id>/<int:census_year>")
-@cache.cached(response_hit_indication=True)
+@cached_response(compress=True)
 def get_all_map_stats(variable_id, census_year):
     result = query_engine.map_stats(variable_id, census_year)
 
