@@ -12,7 +12,7 @@ db_pool = get_db_connection_pool(autocommit=True)
 
 def run_query(sql, params=None, *, as_dicts=False, fetch_one=False):
     """
-    Runs a read query. If Neon has dropped the pool's connections (compute suspended), clears them and retries once.
+    Runs a read query
     """
     def run():
         with db_pool.connection() as conn, conn.cursor(row_factory=dict_row if as_dicts else tuple_row) as cur:
@@ -24,11 +24,9 @@ def run_query(sql, params=None, *, as_dicts=False, fetch_one=False):
         res = run()
         print(f"Query took {(time.perf_counter() - start) * 1000:.2f} ms")
         return res
-    except psycopg.OperationalError:
-        # Catching OperationalError is a bit broad (includes PoolTimeout, QueryCanceled), but we can ignore for the scale of this project
-        # At free tier, Neon drops connections after 5 minutes, so we need to account for this by retrying
-        db_pool.check()
-        return run()
+    except:
+        print(f"Error running query: {sql} with params: {params}")
+        raise
 
 
 def all_variable_info():
