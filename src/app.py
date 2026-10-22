@@ -6,6 +6,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_orjson import OrjsonProvider
 
 from src import query_engine
 from src.health_check import health_check
@@ -31,10 +32,8 @@ limiter = Limiter(
     swallow_errors=True,
 )
 
-app.json.sort_keys = (
-    False  # Disable sorting of keys in JSON responses for better performance
-)
-
+json_provider = OrjsonProvider(app)
+app.json = json_provider
 
 @app.route("/health")
 def get_health():
