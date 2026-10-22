@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM python:3.14-alpine
 WORKDIR /app
 
 # For accurate logging, see https://codemia.io/knowledge-hub/path/what_is_the_use_of_pythonunbuffered_in_docker_file
