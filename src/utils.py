@@ -35,7 +35,8 @@ def get_db_connection_pool(autocommit=False):
         dbname=os.environ["DB_NAME"],
         user=os.environ["DB_USER"],
         password=os.environ["DB_PASSWORD"],
-        host=os.environ["DB_HOST"]
+        host=os.environ["DB_HOST"],
+        sslmode=os.getenv("DB_SSL_MODE", "require")
     )
 
     return psycopg_pool.ConnectionPool(

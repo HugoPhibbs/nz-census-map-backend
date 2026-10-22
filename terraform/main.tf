@@ -68,6 +68,25 @@ resource "google_storage_bucket_iam_member" "bucket_iam_member" {
   member = "allUsers"
 }
 
+### VPC network
+resource "google_project_service" "compute" {
+  service            = "compute.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_compute_network" "backend_vpc" {
+  name                    = "nz-census-map-backend-vpc"
+  auto_create_subnetworks = false
+  depends_on              = [google_project_service.compute]
+}
+
+resource "google_compute_subnetwork" "backend_vpc_subnet" {
+  name          = "nz-census-map-backend-subnet"
+  ip_cidr_range = "10.10.0.0/24" # From 10.10.0.0 to 10.10.0.255
+  region        = var.gcp_region
+  network       = google_compute_network.backend_vpc.id
+}
+
 ### Backend API
 
 variable "cloud_run_service_name" {
@@ -93,18 +112,11 @@ resource "google_cloud_run_v2_service" "api" {
       max_instance_count = 5
     }
 
-    volumes {
-      name = "cloudsql"
-      cloud_sql_instance {
-        instances = [google_sql_database_instance.api_db.connection_name]
-      }
-    }
-
     vpc_access {
       network_interfaces {
         subnetwork = google_compute_subnetwork.backend_vpc_subnet.id
       }
-      egress     = "PRIVATE_RANGES_ONLY"
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -115,14 +127,9 @@ resource "google_cloud_run_v2_service" "api" {
         startup_cpu_boost = true
       }
 
-      volume_mounts {
-        name       = "cloudsql"
-        mount_path = "/cloudsql"
-      }
-
       env {
         name  = "DB_HOST"
-        value = "/cloudsql/${google_sql_database_instance.api_db.connection_name}"
+        value = google_compute_address.api_db_private_ip.address
       }
 
       env {
@@ -138,6 +145,11 @@ resource "google_cloud_run_v2_service" "api" {
       env {
         name  = "DB_PASSWORD"
         value = var.db_password
+      }
+
+      env {
+        name = "DB_SSL_MODE"
+        value = "require"
       }
 
       env {
@@ -166,6 +178,8 @@ resource "google_cloud_run_v2_service" "api" {
       client_version,
       traffic
     ]
+
+    
   }
 }
 
@@ -192,13 +206,37 @@ resource "google_sql_database_instance" "api_db" {
     edition                     = "ENTERPRISE"
     deletion_protection_enabled = true
 
-    # Only allow connections via the GCP SQL Proxy
-    connector_enforcement = "REQUIRED"
+    connector_enforcement = "NOT_REQUIRED"
 
     backup_configuration {
       enabled = true
     }
+
+    ip_configuration {
+      ipv4_enabled = false
+      psc_config {
+        psc_enabled               = true
+        allowed_consumer_projects = [var.project_id]
+      }
+    }
   }
+}
+
+resource "google_compute_address" "api_db_private_ip" {
+  name         = "nz-census-map-db-private-ip"
+  region       = var.gcp_region
+  subnetwork   = google_compute_subnetwork.backend_vpc_subnet.id
+  address_type = "INTERNAL"
+  address      = "10.10.0.50"
+}
+
+resource "google_compute_forwarding_rule" "api_db_forwarding_rule" {
+  name       = "nz-census-map-db-forwarding-rule"
+  region     = var.gcp_region
+  network    = google_compute_network.backend_vpc.id
+  ip_address = google_compute_address.api_db_private_ip.id
+  target     = google_sql_database_instance.api_db.psc_service_attachment_link
+  load_balancing_scheme = ""
 }
 
 resource "google_sql_database" "api_db_database" {
@@ -235,36 +273,18 @@ variable "redis_vm_zone" {
 }
 
 variable "redis_vm_name" {
-  type    = string
+  type = string
 }
 
 locals {
-  redis_ip = "10.10.0.100"
+  redis_ip         = "10.10.0.100"
   redis_max_memory = "128mb"
 }
 
-resource "google_project_service" "compute" {
-  service            = "compute.googleapis.com"
-  disable_on_destroy = false
-}
-
-resource "google_compute_network" "backend_vpc" {
-  name                    = "nz-census-map-backend-vpc"
-  auto_create_subnetworks = false
-  depends_on              = [google_project_service.compute]
-}
-
-resource "google_compute_subnetwork" "backend_vpc_subnet" {
-  name          = "nz-census-map-backend-subnet"
-  ip_cidr_range = "10.10.0.0/24" # From 10.10.0.0 to 10.10.0.255
-  region        = var.gcp_region
-  network       = google_compute_network.backend_vpc.id
-}
-
 resource "google_compute_firewall" "allow_redis" {
-  name    = "allow-redis"
-  network = google_compute_network.backend_vpc.name
-  source_ranges = [google_compute_subnetwork.backend_vpc_subnet.ip_cidr_range] 
+  name          = "allow-redis"
+  network       = google_compute_network.backend_vpc.name
+  source_ranges = [google_compute_subnetwork.backend_vpc_subnet.ip_cidr_range]
 
   allow {
     protocol = "tcp"
@@ -273,8 +293,8 @@ resource "google_compute_firewall" "allow_redis" {
 }
 
 resource "google_compute_firewall" "allow_redis_iap" {
-  name    = "allow-redis-iap"
-  network = google_compute_network.backend_vpc.name
+  name          = "allow-redis-iap"
+  network       = google_compute_network.backend_vpc.name
   source_ranges = ["35.235.240.0/20"] # Google IAP TCP forwarding range
 
   allow {
@@ -294,7 +314,7 @@ resource "google_compute_router_nat" "backend_nat" {
   router = google_compute_router.backend_router.name
   region = var.gcp_region
 
-  nat_ip_allocate_option = "AUTO_ONLY"
+  nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
 
   subnetwork {
@@ -304,10 +324,10 @@ resource "google_compute_router_nat" "backend_nat" {
 }
 
 resource "google_compute_instance" "redis_instance" {
-  name         = "${var.redis_vm_name}"
+  name         = var.redis_vm_name
   machine_type = "e2-micro"
   zone         = "${var.gcp_region}-${var.redis_vm_zone}"
-  depends_on = [google_compute_router_nat.backend_nat]
+  depends_on   = [google_compute_router_nat.backend_nat]
 
   boot_disk {
     initialize_params {
