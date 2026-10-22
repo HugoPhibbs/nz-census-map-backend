@@ -85,4 +85,5 @@ def cached_response_obj(body, status, encoding, hit):
         response.headers["Content-Encoding"] = encoding
     response.headers["Vary"] = "Accept-Encoding"
     response.headers["X-Cache"] = "HIT" if hit else "MISS"
+    response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT} s-maxage={CACHE_TIMEOUT}"
     return response
