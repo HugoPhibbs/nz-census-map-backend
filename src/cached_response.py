@@ -39,7 +39,7 @@ def cached_response(
             if compress:
                 encoding = request.accept_encodings.best_match(list(ENCODERS))
                 if encoding is None:
-                    return view(*args, **kwargs)
+                    encoding = "identity"
             else:
                 encoding = "identity"
 
