@@ -80,7 +80,7 @@ def cached_response(
 
 
 def cached_response_obj(body, status, encoding, hit):
-    response = Response(body, status=status, mimetype="application/json")
+    response = Response(body, status=status, mimetype="application/json") # hardcoded to application/json for now
     if encoding != "identity":
         response.headers["Content-Encoding"] = encoding
     response.headers["Vary"] = "Accept-Encoding"
