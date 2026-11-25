@@ -121,7 +121,7 @@ def all_variable_stats(
     )
 
     if area_type:
-        areas = Table("AREAS")
+        areas = Table("areas")
         q = (
             q.join(areas)
             .on(demographic_data.area_id == areas.area_id)
