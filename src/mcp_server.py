@@ -128,7 +128,7 @@ def get_variable_values_for_area(
     area_id: str,
     census_year: int = 2023,
     variables_ids_to_keep: str | list[str] | None = None,
-) -> float | None:
+) -> dict[str, float | None]:
     """
     Get the value of a specific demographic variable for a specific area and census year.
 
@@ -138,11 +138,11 @@ def get_variable_values_for_area(
     - variables_ids_to_keep (str | list[str]): Optional, leave empty for all variables OR specify a single variable ID (str) or a list of variable IDs (list[str]) to keep in the results.
 
     Returns:
-    The value of the specified demographic variable for the given area and census year, or None if not available.
+    A list of key value pairs with format {variable_id: variable_value}. E.g. [{"median_age": 63}, {"pop_resident_usual": 12087}]
 
     Example:
-    value = get_variable_values_for_area("001", 2023, "median_age")
-    value = get_variable_values_for_area("001", 2023, ["median_personal_income", "median_age"])
+    values = get_variable_values_for_area("001", 2023, "median_age")
+    values = get_variable_values_for_area("001", 2023, ["median_personal_income", "median_age"])
     """
     if isinstance(variables_ids_to_keep, str):
         variables_ids_to_keep = [variables_ids_to_keep]
