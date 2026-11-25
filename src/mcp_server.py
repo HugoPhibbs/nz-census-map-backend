@@ -13,10 +13,10 @@ mcp = MCPServer(
     instructions="""
     A querying interface for NZ Census Data for the years 2013, 2018, 2023
 
-    Census data is paritioned into geographical areas types. In ascending order of size these are:  
+    Census data is partitioned into geographical areas types. In ascending order of size these are:  
     1. SA1: Containing around 100-200 people. Equivalent to a small neighbourhood or sparse rural area
     2. SA2: Contains constituent SA1s. Equivalent to a neighbourhood
-    3. SA: Contains SA2s. Equivalent to a group of neighbourhoods
+    3. SA3: Contains SA2s. Equivalent to a group of neighbourhoods
     4. TA: Containing SA3s. A much larger area such as entire cities or regions. 
     """,
 )
