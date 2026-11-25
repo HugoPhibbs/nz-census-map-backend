@@ -85,13 +85,13 @@ resource "google_cloud_run_v2_service" "api" {
 
   invoker_iam_disabled = true # Public
 
+  scaling {
+    min_instance_count = 0
+    max_instance_count = 5
+  }
+
   template {
     service_account = google_service_account.api_sa.email
-
-    scaling {
-      min_instance_count = 0
-      max_instance_count = 5
-    }
 
     volumes {
       name = "cloudsql"
@@ -104,7 +104,7 @@ resource "google_cloud_run_v2_service" "api" {
       network_interfaces {
         subnetwork = google_compute_subnetwork.backend_vpc_subnet.id
       }
-      egress     = "PRIVATE_RANGES_ONLY"
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -323,11 +323,11 @@ variable "redis_vm_zone" {
 }
 
 variable "redis_vm_name" {
-  type    = string
+  type = string
 }
 
 locals {
-  redis_ip = "10.10.0.100"
+  redis_ip         = "10.10.0.100"
   redis_max_memory = "128mb"
 }
 
@@ -350,9 +350,9 @@ resource "google_compute_subnetwork" "backend_vpc_subnet" {
 }
 
 resource "google_compute_firewall" "allow_redis" {
-  name    = "allow-redis"
-  network = google_compute_network.backend_vpc.name
-  source_ranges = [google_compute_subnetwork.backend_vpc_subnet.ip_cidr_range] 
+  name          = "allow-redis"
+  network       = google_compute_network.backend_vpc.name
+  source_ranges = [google_compute_subnetwork.backend_vpc_subnet.ip_cidr_range]
 
   allow {
     protocol = "tcp"
@@ -361,8 +361,8 @@ resource "google_compute_firewall" "allow_redis" {
 }
 
 resource "google_compute_firewall" "allow_redis_iap" {
-  name    = "allow-redis-iap"
-  network = google_compute_network.backend_vpc.name
+  name          = "allow-redis-iap"
+  network       = google_compute_network.backend_vpc.name
   source_ranges = ["35.235.240.0/20"] # Google IAP TCP forwarding range
 
   allow {
@@ -382,7 +382,7 @@ resource "google_compute_router_nat" "backend_nat" {
   router = google_compute_router.backend_router.name
   region = var.gcp_region
 
-  nat_ip_allocate_option = "AUTO_ONLY"
+  nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
 
   subnetwork {
@@ -392,10 +392,10 @@ resource "google_compute_router_nat" "backend_nat" {
 }
 
 resource "google_compute_instance" "redis_instance" {
-  name         = "${var.redis_vm_name}"
+  name         = var.redis_vm_name
   machine_type = "e2-micro"
   zone         = "${var.gcp_region}-${var.redis_vm_zone}"
-  depends_on = [google_compute_router_nat.backend_nat]
+  depends_on   = [google_compute_router_nat.backend_nat]
 
   boot_disk {
     initialize_params {
