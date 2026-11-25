@@ -19,6 +19,7 @@ jobs:
     env:
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      MCP_BEARER_TOKEN: ${{ secrets.MCP_BEARER_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       
@@ -47,6 +48,10 @@ jobs:
       - name: Update API (Cloud Run)
         if : github.event_name == 'push'
         run: python deploy.py --update-api --no-input
+
+      - name: Update MCP server (Cloud Run)
+        if: github.event_name == 'push'
+        run: python deploy.py --update-mcp --no-input
 
       - name: API Health Check
         if: github.event_name == 'push'

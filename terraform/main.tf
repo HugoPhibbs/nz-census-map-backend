@@ -169,6 +169,94 @@ resource "google_cloud_run_v2_service" "api" {
   }
 }
 
+### MCP server
+variable "mcp_service_name" {
+  type = string
+}
+
+variable "mcp_bearer_token" {
+  type      = string
+  sensitive = true
+}
+
+# Same image as the API, the entrypoint picks the server via the "mcp" arg
+resource "google_cloud_run_v2_service" "mcp" {
+  name     = var.mcp_service_name
+  location = var.gcp_region
+
+  invoker_iam_disabled = true # Public, auth is handled by the bearer token in the app
+
+  template {
+    service_account = google_service_account.api_sa.email
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 2
+    }
+
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.api_db.connection_name]
+      }
+    }
+
+    containers {
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+      args  = ["mcp"]
+
+      resources {
+        startup_cpu_boost = true
+      }
+
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
+
+      env {
+        name  = "DB_HOST"
+        value = "/cloudsql/${google_sql_database_instance.api_db.connection_name}"
+      }
+
+      env {
+        name  = "DB_NAME"
+        value = google_sql_database.api_db_database.name
+      }
+
+      env {
+        name  = "DB_USER"
+        value = google_sql_user.api_db_user.name
+      }
+
+      env {
+        name  = "DB_PASSWORD"
+        value = var.db_password
+      }
+
+      env {
+        name  = "MCP_BEARER_TOKEN"
+        value = var.mcp_bearer_token
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].image,
+      template[0].revision,
+      build_config,
+      client,
+      client_version,
+      traffic
+    ]
+  }
+}
+
+output "mcp_url" {
+  value = "${google_cloud_run_v2_service.mcp.uri}/mcp"
+}
+
 ### PostgreSQL database
 variable "db_password" {
   type      = string
