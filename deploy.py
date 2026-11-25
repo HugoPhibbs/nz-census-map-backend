@@ -74,6 +74,7 @@ def tf_env():
     secret_pairs = [
         ("redis_password", "REDIS_PASSWORD"),
         ("db_password", "DB_PASSWORD"),
+        ("mcp_bearer_token", "MCP_BEARER_TOKEN"),
     ]
 
     tf_env = os.environ.copy()
@@ -107,10 +108,19 @@ def tf_apply(no_input: bool):
 
 
 def api_health_check(url):
+    return _health_check(f"{url}/health", expected_status=200)
+
+
+def mcp_health_check(url):
+    # No auth header, so a live MCP server should reject us with 401
+    return _health_check(f"{url}/mcp", expected_status=401)
+
+
+def _health_check(url, expected_status):
     for attempt in range(10):
         try:
-            response = requests.get(f"{url}/health", timeout=10)
-            if response.status_code == 200:
+            response = requests.get(url, timeout=10)
+            if response.status_code == expected_status:
                 return True
             print(
                 f"Attempt {attempt + 1}: API health check returned {response.status_code}"
@@ -134,34 +144,40 @@ def restart_redis_vm():
 
 
 def update_api():
+    update_cloud_run_service(TF_VARS["cloud_run_service_name"], api_health_check)
+
+
+def update_mcp():
+    update_cloud_run_service(TF_VARS["mcp_service_name"], mcp_health_check)
+
+
+def update_cloud_run_service(service_name, health_check):
     # Check if it exists first, we only intend to update the API, not deploy it for the first time (managed by Terraform)
     exists_cmd = [
         "gcloud",
         "run",
         "services",
         "describe",
-        TF_VARS["cloud_run_service_name"],
+        service_name,
         "--region",
         TF_VARS["gcp_region"],
         "--format=json",
     ]
-    exists = (
-        subprocess.run(
-            exists_cmd, check=False, shell=use_shell, capture_output=True, text=True
-        ).returncode
-        == 0
+    exists_result = subprocess.run(
+        exists_cmd, check=False, shell=use_shell, capture_output=True, text=True
     )
 
-    if not exists:
+    if exists_result.returncode != 0:
         raise RuntimeError(
-            f"Cloud Run service {TF_VARS['cloud_run_service_name']} does not exist. Please run terraform apply first."
+            f"Could not find Cloud Run service {service_name}. If it doesn't exist, run terraform apply first.\n"
+            f"gcloud output:\n{exists_result.stdout}{exists_result.stderr}"
         )
 
     deploy_cmd = [
         "gcloud",
         "run",
         "deploy",
-        TF_VARS["cloud_run_service_name"],
+        service_name,
         "--source",
         ".",
         "--region",
@@ -179,7 +195,7 @@ def update_api():
         "run",
         "services",
         "describe",
-        TF_VARS["cloud_run_service_name"],
+        service_name,
         "--region",
         TF_VARS["gcp_region"],
         "--format=json",
@@ -194,7 +210,7 @@ def update_api():
     )
     candidate_url = candidate.get("url") if candidate else None
 
-    if not (candidate_url and api_health_check(candidate_url)):
+    if not (candidate_url and health_check(candidate_url)):
         raise RuntimeError(
             f"Candidate revision failed health check. Aborting deployment."
         )
@@ -207,7 +223,7 @@ def update_api():
         "run",
         "services",
         "update-traffic",
-        TF_VARS["cloud_run_service_name"],
+        service_name,
         "--to-revisions",
         f"{revision_name}=100",
         "--region",
@@ -243,6 +259,10 @@ if __name__ == "__main__":
         help="Run terraform init and apply",
     )
 
+    parser.add_argument(
+        "--update-mcp", action="store_true", help="Add the latest changes to the MCP server on Cloud Run"
+    )
+
     parser.add_argument("--restart-redis", action="store_true", help="Restart the Redis VM")
 
     parser.add_argument("--tf-init", action="store_true", help="Run terraform init")
@@ -267,6 +287,9 @@ if __name__ == "__main__":
 
     if args.update_api:
         update_api()
+
+    if args.update_mcp:
+        update_mcp()
 
     if args.restart_redis:
         restart_redis_vm()

@@ -128,8 +128,8 @@ def get_variable_values_for_area(
     The value of the specified demographic variable for the given area and census year, or None if not available.
     
     Example:
-    value = get_variable_values_for_area("001", "median_age")
-    value = get_variable_values_for_area("001", ["median_personal_income", "median_age"], 2023)
+    value = get_variable_values_for_area("001", 2023, "median_age")
+    value = get_variable_values_for_area("001", 2023, ["median_personal_income", "median_age"])
     """
     if isinstance(variables_ids_to_keep, str):
         variables_ids_to_keep = [variables_ids_to_keep]
