@@ -42,8 +42,6 @@ class Area(TypedDict):
 
 class DemographicData(TypedDict):
     area_id: str
-    census_year: int
-    variable_id: str
     variable_value: float
 
 
@@ -180,14 +178,10 @@ def get_all_variable_stats(
     [
         {
             "area_id": "001",
-            "census_year": 2023,
-            "variable_id": "median_personal_income",
             "variable_value": 55000.0
         },
         {
             "area_id": "002",
-            "census_year": 2023,
-            "variable_id": "median_personal_income",
             "variable_value": 60000.0
         },
         ...
