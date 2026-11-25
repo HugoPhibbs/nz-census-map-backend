@@ -208,6 +208,30 @@ def get_all_variable_stats(
     )
 
 
+@mcp.tool()
+def fuzzy_search_areas_by_name(
+    query: str, area_type: str | None = None, top_k: int = 10
+) -> list[dict[str, str]]:
+    """
+    Fuzzy searches areas by their name with a query string
+
+    Can be optionally filtered by their area type
+
+    Returns the top_k matching results as a list of dicts, where each dict has keys for area_id, area_name, area_type, ordered by their relevance
+    """
+    return query_engine.fuzzy_search_areas_by_name(query, area_type, top_k)
+
+
+@mcp.tool()
+def fuzzy_search_variables_by_name(query: str, top_k: int = 10) -> list[dict[str, str | None]]:
+    """
+    Fuzzy searches variables by their name with a query string
+
+    Returns the top_k matching results as a list of dicts, where each dict has keys for variable_id, plain_name and description
+    """
+    return query_engine.fuzzy_search_variables_by_name(query, top_k)
+
+
 if __name__ == "__main__":
     import uvicorn
 

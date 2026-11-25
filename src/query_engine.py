@@ -3,7 +3,7 @@ import time
 
 import psycopg
 from psycopg.rows import dict_row, tuple_row
-from pypika import Order, Query, Table
+from pypika import CustomFunction, Order, Parameter, Query, Table
 
 from src.utils import get_db_connection_pool
 
@@ -171,3 +171,30 @@ def variable_compare(variable_id, year_from, year_to, method):
         """,
         (variable_id, year_from, year_to),
     ))
+
+
+def fuzzy_search_areas_by_name(query : str, area_type: str | None = None, top_k: int = 10) -> list[dict[str, str | None]]:
+    areas = Table("areas")
+    word_similarity = CustomFunction("word_similarity", ["query", "target"])
+
+    q = Query.from_(areas).select(areas.area_id, areas.area_name, areas.area_type)
+    params = []
+
+    if area_type:
+        q = q.where(areas.area_type == Parameter("%s"))
+        params.append(area_type)
+
+    q = q.orderby(
+        word_similarity(Parameter("%s"), areas.area_name), order=Order.desc
+    ).limit(int(top_k))
+    params.append(query)
+
+    return run_query(q.get_sql(), params, as_dicts=True)
+
+def fuzzy_search_variables_by_name(query : str, top_k: int = 10) -> dict[str, str]:
+    return run_query(
+        "SELECT variable_id, plain_name, description FROM demographic_variables "
+        "ORDER BY word_similarity(%s, plain_name) DESC LIMIT %s",
+        (query, top_k),
+        as_dicts=True
+    )

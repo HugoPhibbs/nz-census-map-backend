@@ -53,3 +53,6 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS NATIONAL_PERCENTAGE_AVERAGES AS
                 AND pop.variable_id = 'pop_resident_usual'
                 WHERE SUBSTR(pct.variable_id, 1, 5) = 'perc_' AND LENGTH(pct.area_id) = 3
                 GROUP BY pct.variable_id, pct.census_year LIMIT 100
+
+
+CREATE EXTENSION pg_trgm;
