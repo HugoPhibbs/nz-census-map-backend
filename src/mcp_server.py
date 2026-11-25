@@ -8,7 +8,18 @@ from starlette.responses import JSONResponse
 
 from src import query_engine
 
-mcp = MCPServer("NZ Census Map Server")
+mcp = MCPServer(
+    "NZ Census Map Server",
+    instructions="""
+    A querying interface for NZ Census Data for the years 2013, 2018, 2023
+
+    Census data is paritioned into geographical areas types. In ascending order of size these are:  
+    1. SA1: Containing around 100-200 people. Equivalent to a small neighbourhood or sparse rural area
+    2. SA2: Contains constituent SA1s. Equivalent to a neighbourhood
+    3. SA: Contains SA2s. Equivalent to a group of neighbourhoods
+    4. TA: Containing SA3s. A much larger area such as entire cities or regions. 
+    """,
+)
 
 EXPECTED_TOKEN = os.getenv("MCP_BEARER_TOKEN")
 if not EXPECTED_TOKEN:
@@ -62,6 +73,7 @@ def get_area_info(area_id: str) -> Area:
     """
     return query_engine.area_info(area_id)
 
+
 @mcp.tool()
 def get_variable_avgs(census_year: int = 2023) -> dict[str, float]:
     """
@@ -101,7 +113,7 @@ def get_variable_ids_to_name() -> dict[str, str]:
     Get a mapping of variable IDs to their corresponding plain names.
 
     Returns a dictionary where the keys are variable IDs and the values are the plain names associated with those variables.
-    
+
     Format of the returned dictionary:
     {
         "variable_id_1": "plain_name_1",
@@ -110,9 +122,12 @@ def get_variable_ids_to_name() -> dict[str, str]:
     """
     return query_engine.variable_ids_to_name()
 
+
 @mcp.tool()
 def get_variable_values_for_area(
-    area_id: str, census_year: int = 2023, variables_ids_to_keep: str | list[str] | None = None
+    area_id: str,
+    census_year: int = 2023,
+    variables_ids_to_keep: str | list[str] | None = None,
 ) -> float | None:
     """
     Get the value of a specific demographic variable for a specific area and census year.
@@ -124,15 +139,16 @@ def get_variable_values_for_area(
 
     Returns:
     The value of the specified demographic variable for the given area and census year, or None if not available.
-    
+
     Example:
     value = get_variable_values_for_area("001", 2023, "median_age")
     value = get_variable_values_for_area("001", 2023, ["median_personal_income", "median_age"])
     """
     if isinstance(variables_ids_to_keep, str):
         variables_ids_to_keep = [variables_ids_to_keep]
-    return query_engine.variable_values_for_area(area_id, census_year, variables_ids_to_keep)
-
+    return query_engine.variable_values_for_area(
+        area_id, census_year, variables_ids_to_keep
+    )
 
 
 @mcp.tool()
@@ -141,7 +157,7 @@ def get_all_variable_ids() -> list[str]:
     Get a list of all demographic variable IDs.
 
     Returns a list of strings, each representing a unique variable ID.
-    
+
     Example of the returned list:
     [
         "median_personal_income",
@@ -173,7 +189,7 @@ def get_all_variable_stats(
 
     Returns:
     A list of dictionaries, each containing demographic data points for the specified variable
-    
+
     Example of the returned list:
     [
         {
