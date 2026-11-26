@@ -54,6 +54,7 @@ class Area(TypedDict):
 
 class DemographicData(TypedDict):
     area_id: str
+    variable_id: str
     variable_value: float
 
 
@@ -73,6 +74,17 @@ def get_area_info(area_id: str) -> Area:
     So don't bother trying to get their names. If an area_name is None/null assume it is an SA1 area.
     """
     return query_engine.area_info(area_id)
+
+
+@mcp.tool()
+def get_area_info_bulk(area_ids: list[str]) -> list[Area]:
+    """
+    Get information about a areas with the given ids
+
+    Please note, for areas that are "SA1", there are no names (they are only numbered).
+    So don't bother trying to get their names. If an area_name is None/null assume it is an SA1 area.
+    """
+    return query_engine.area_info_bulk(area_ids)
 
 
 @mcp.tool()
@@ -125,30 +137,28 @@ def get_variable_ids_to_name() -> dict[str, str]:
 
 
 @mcp.tool()
-def get_variable_values_for_area(
-    area_id: str,
+def get_variable_values_for_areas(
+    area_ids: list[str],
     census_year: int = 2023,
-    variables_ids_to_keep: str | list[str] | None = None,
-) -> dict[str, float | None]:
+    variable_ids_to_keep: list[str] | None = None,
+) -> dict[str, dict[str, float | None]]:
     """
-    Get the value of a specific demographic variable for a specific area and census year.
+    Get the value for specific demographic variables for specific areas and a census year.
 
     Parameters:
-    - area_id (str): The ID of the area.
+    - area_ids (list[str]): List containing the IDs of the areas you're interested in.
     - census_year (int): The census year to query. Default is 2023.
-    - variables_ids_to_keep (str | list[str]): Optional, leave empty for all variables OR specify a single variable ID (str) or a list of variable IDs (list[str]) to keep in the results.
+    - variables_ids_to_keep (list[str]): Optional, leave empty for all variables OR specify a list of variable IDs to keep in the results.
 
     Returns:
-    A list of key value pairs with format {variable_id: variable_value}. E.g. [{"median_age": 63}, {"pop_resident_usual": 12087}]
+    A dict containing stats for each area. Format: {area_id: {variable_id: variable_value}, ... }. E.g. {area_id1: {{"median_age": 63}, {"pop_resident_usual": 12087}}, area_id2: {...}}
 
     Example:
-    values = get_variable_values_for_area("001", 2023, "median_age")
-    values = get_variable_values_for_area("001", 2023, ["median_personal_income", "median_age"])
+    values = get_variable_values_for_areas(["001"], 2023, ["median_age"])
+    values = get_variable_values_for_areas(["001", "002"], 2023, ["median_personal_income", "median_age"])
     """
-    if isinstance(variables_ids_to_keep, str):
-        variables_ids_to_keep = [variables_ids_to_keep]
-    return query_engine.variable_values_for_area(
-        area_id, census_year, variables_ids_to_keep
+    return query_engine.variable_values_for_areas(
+        area_ids, census_year, variable_ids_to_keep
     )
 
 
@@ -172,7 +182,7 @@ def get_all_variable_ids() -> list[str]:
 
 @mcp.tool()
 def get_all_variable_stats(
-    variable_id: str,
+    variable_ids: list[str],
     census_year: int = 2023,
     area_type: AREA_TYPE | None = None,
     sort_order: Literal["asc", "desc"] | None = None,
@@ -180,10 +190,10 @@ def get_all_variable_stats(
     top_k: int | None = None,
 ) -> list[DemographicData]:
     """
-    Get all demographic statistics for a specific variable across all areas for a given census year.
+    Get all demographic statistics for specified variables across all areas for a given census year.
 
     Parameters:
-    - variable_id (str): The ID of the demographic variable.
+    - variable_ids (list[str]): The IDs of the demographic variable to fetch for
     - census_year (int): The census year to query. Default is 2023.
     - area_type (AREA_TYPE | None): Optional. Filter areas by type (e.g., "SA1", "SA2", "SA3", "TA"). If None, all area types are included. Default is None.
     - sort_order ("asc" | "desc" | None): Optional. Sort results by value. Areas with no value are excluded when sorting. If None, results are unsorted. Default is None.
@@ -197,17 +207,19 @@ def get_all_variable_stats(
     [
         {
             "area_id": "001",
+            "variable_id": "pop_resident_usual",
             "variable_value": 55000.0
         },
         {
             "area_id": "002",
+            "variable_id": "pop_resident_usual",
             "variable_value": 60000.0
         },
         ...
     ]
     """
     return query_engine.all_variable_stats(
-        variable_id, census_year, area_type, sort_order, contained_in_area_id, top_k
+        variable_ids, census_year, area_type, sort_order, contained_in_area_id, top_k
     )
 
 
@@ -228,11 +240,11 @@ def fuzzy_search_areas_by_name(
 @mcp.tool()
 def search_variables_by_query(query: str, top_k: int = 10) -> list[str]:
     """
-    Searches variables according to a brief query, returns the top k matching variable ids
+    Searches variables according to a brief query, returns the top k matching variables
 
     Queries should be short conceptual phrases, such as "asian community" or "elderly population", not entire sentences
 
-    Returns the top_k matching results as a list of dicts, where each dict has keys for variable_id, plain_name and description
+    Returns the top_k matching results as a list of matching variable ids 
     """
     return search_variables(query, top_k)
 
