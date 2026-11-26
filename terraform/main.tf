@@ -113,6 +113,7 @@ resource "google_cloud_run_v2_service" "api" {
 
       resources {
         startup_cpu_boost = true
+        cpu_idle = true
       }
 
       volume_mounts {
@@ -207,6 +208,7 @@ resource "google_cloud_run_v2_service" "mcp" {
 
       resources {
         startup_cpu_boost = true
+        cpu_idle = true
       }
 
       volume_mounts {
