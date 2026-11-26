@@ -5,6 +5,7 @@ import psycopg
 import psycopg_pool
 from dotenv import load_dotenv
 from psycopg.types.numeric import NumericBinaryLoader, NumericLoader
+from qdrant_client import QdrantClient
 import redis
 
 load_dotenv()
@@ -60,4 +61,16 @@ def get_redis_connection_pool():
         
     except Exception as e:
         print(f"Error creating Redis connection pool: {e}")
+        raise
+
+@functools.lru_cache
+def get_qdrant_client():
+    try:
+        return QdrantClient(
+                url=os.environ["QDRANT_ENDPOINT"],
+                api_key=os.environ["QDRANT_API_KEY"],
+                cloud_inference=True,
+                )
+    except Exception as e:
+        print(f"Error while creating a qdrant client: {e}")
         raise

@@ -113,7 +113,7 @@ resource "google_cloud_run_v2_service" "api" {
 
       resources {
         startup_cpu_boost = true
-        cpu_idle = true
+        cpu_idle          = true
       }
 
       volume_mounts {
@@ -180,6 +180,16 @@ variable "mcp_bearer_token" {
   sensitive = true
 }
 
+variable "qdrant_api_key" {
+  type = string
+  sensitive = true
+}
+
+variable "qdrant_endpoint" {
+  type = string
+  sensitive = true
+}
+
 # Same image as the API, the entrypoint picks the server via the "mcp" arg
 resource "google_cloud_run_v2_service" "mcp" {
   name     = var.mcp_service_name
@@ -208,7 +218,7 @@ resource "google_cloud_run_v2_service" "mcp" {
 
       resources {
         startup_cpu_boost = true
-        cpu_idle = true
+        cpu_idle          = true
       }
 
       volume_mounts {
@@ -240,13 +250,23 @@ resource "google_cloud_run_v2_service" "mcp" {
         name  = "MCP_BEARER_TOKEN"
         value = var.mcp_bearer_token
       }
+
+      env {
+        name  = "QDRANT_API_KEY"
+        value = var.qdrant_api_key
+      }
+
+      env {
+        name  = "QDRANT_ENDPOINT"
+        value = var.qdrant_endpoint
+      }
     }
   }
 
   lifecycle {
     ignore_changes = [
       template[0].containers[0].image,
-      template[0].revision,
+      # template[0].revision,
       build_config,
       client,
       client_version,
