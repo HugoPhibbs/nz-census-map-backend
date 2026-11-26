@@ -75,6 +75,8 @@ def tf_env():
         ("redis_password", "REDIS_PASSWORD"),
         ("db_password", "DB_PASSWORD"),
         ("mcp_bearer_token", "MCP_BEARER_TOKEN"),
+        ("qdrant_api_key", "QDRANT_API_KEY"),
+        ("qdrant_endpoint", "QDRANT_ENDPOINT"),
     ]
 
     tf_env = os.environ.copy()

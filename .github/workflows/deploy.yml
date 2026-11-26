@@ -20,6 +20,8 @@ jobs:
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       MCP_BEARER_TOKEN: ${{ secrets.MCP_BEARER_TOKEN }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      QDRANT_ENDPOINT: ${{ secrets.QDRANT_ENDPOINT }}
     steps:
       - uses: actions/checkout@v4
       

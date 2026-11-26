@@ -7,6 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from src import query_engine
+from src.search_variables import search_variables
 
 mcp = MCPServer(
     "NZ Census Map Server",
@@ -223,13 +224,15 @@ def fuzzy_search_areas_by_name(
 
 
 @mcp.tool()
-def fuzzy_search_variables_by_name(query: str, top_k: int = 10) -> list[dict[str, str | None]]:
+def search_variables_by_query(query: str, top_k: int = 10) -> list[str]:
     """
-    Fuzzy searches variables by their name with a query string
+    Searches variables according to a brief query, returns the top k matching variable ids
+
+    Queries should be short conceptual phrases, such as "asian community" or "elderly population", not entire sentences
 
     Returns the top_k matching results as a list of dicts, where each dict has keys for variable_id, plain_name and description
     """
-    return query_engine.fuzzy_search_variables_by_name(query, top_k)
+    return search_variables(query, top_k)
 
 
 if __name__ == "__main__":

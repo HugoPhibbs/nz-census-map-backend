@@ -21,6 +21,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pypika>=0.51.1",
     "python-dotenv>=1.2.3",
+    "qdrant-client>=1.20.0",
 ]
 
 [dependency-groups]
@@ -29,6 +30,8 @@ dev = [
     "pandas>=3.0.6",
     "waitress>=3.0.2",
     "requests>=2.34.2",
+    "sentence-transformers>=6.3.0",
+    "pyarrow>=26.0.1",
 ]
 
 [tool.ruff.lint]
