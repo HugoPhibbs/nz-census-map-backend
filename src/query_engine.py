@@ -40,7 +40,6 @@ def area_info(area_id: str):
         fetch_one=True
         )
 
-
 def area_stats(census_year: int, area_id: str):
     return run_query(
         "SELECT * FROM demographic_data WHERE census_year = %s AND area_id = %s",
@@ -74,7 +73,7 @@ def area_bounding_box(area_id: str):
     return bounding_box[0]
     
 
-def all_variable_ids():
+def all_variable_ids() -> list[str]:
     return [row[0] for row in run_query("SELECT variable_id FROM demographic_variables")]
 
 
@@ -99,6 +98,7 @@ def all_variable_stats(
     census_year=2023,
     area_type=None,
     sort_order: Literal["asc", "desc"] | None = None,
+    contained_in_area_id: str | None = None,
     top_k: int | None = None,
 ):
     """
@@ -120,13 +120,12 @@ def all_variable_stats(
         )
     )
 
-    if area_type:
+    if area_type or contained_in_area_id:
         areas = Table("areas")
-        q = (
-            q.join(areas)
-            .on(demographic_data.area_id == areas.area_id)
-            .where(areas.area_type == area_type)
-        )
+        q = q.join(areas).on(demographic_data.area_id == areas.area_id)
+
+    if area_type:
+        q = q.where(areas.area_type == area_type)
 
     if top_k is not None and sort_order is None:
         sort_order = "desc"
@@ -136,6 +135,27 @@ def all_variable_stats(
             demographic_data.variable_value,
             order=Order.desc if sort_order == "desc" else Order.asc,
         )
+
+    if contained_in_area_id:
+        info = area_info(contained_in_area_id)
+        if not info:
+            raise ValueError(f"Cannot find the area information for the area with id: {contained_in_area_id}")
+
+        parent_area_type = info["area_type"]
+
+        parent_col = ""
+        if parent_area_type == "SA1":
+            raise ValueError(f"The contained in area id can't belong to an SA1 area")
+        elif parent_area_type == "SA2":
+            parent_col = "sa2_parent_id"
+        elif parent_area_type == "SA3":
+            parent_col = "sa3_parent_id"
+        elif parent_area_type == "TA":
+            parent_col = "ta_parent_id"
+        else:
+            raise ValueError(f"Can't find parent id col for the area of type: {parent_area_type}")
+
+        q = q.where(areas[parent_col] == contained_in_area_id)
 
     if top_k is not None:
         q = q.limit(top_k)

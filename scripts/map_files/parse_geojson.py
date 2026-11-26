@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 import pandas as pd
 
 files = [
@@ -127,12 +128,38 @@ def adjust_properties(geojson, name_key, id_key, area_type, all_properties):
         feature["properties"] = new_properties
         all_properties.append(new_properties)
 
+def add_area_hierachies(areas_df: pd.DataFrame):
+    contained_in_df = pd.read_csv(r"data/web-download/geographic-areas-table-2023.csv", dtype=str)
+
+    SA1_ID_COL = "SA12023_code"
+    SA2_ID_COL = "SA22023_code"
+    SA3_ID_COL = "SA32023_code"
+    TA_ID_COL = "TA2023_code"
+
+    cols = [SA1_ID_COL, SA2_ID_COL, SA3_ID_COL, TA_ID_COL]
+
+    contained_in_df = contained_in_df[cols]
+
+    sa1 = contained_in_df[cols].drop_duplicates(SA1_ID_COL).rename(columns={SA1_ID_COL: "area_id", SA2_ID_COL: "sa2_parent_id", SA3_ID_COL: "sa3_parent_id", TA_ID_COL: "ta_parent_id"})
+    sa2 = contained_in_df[cols[1:]].drop_duplicates(SA2_ID_COL).rename(columns={SA2_ID_COL: "area_id", SA3_ID_COL: "sa3_parent_id", TA_ID_COL: "ta_parent_id"})
+    sa3 = contained_in_df[cols[2:]].drop_duplicates(SA3_ID_COL).rename(columns={SA3_ID_COL: "area_id", TA_ID_COL: "ta_parent_id"})
+    hierarchy_df = pd.concat([sa1, sa2, sa3])
+
+    areas_df = areas_df.merge(hierarchy_df, on="area_id", how="left", validate="one_to_one")
+
+    parent_cols = ["sa2_parent_id", "sa3_parent_id", "ta_parent_id"]
+    areas_df = areas_df.replace({np.nan: None}) # NaNs are essentially Nones for strings, so set them to None for SQL ingestion 
+
+    return areas_df
+
 
 def save_areas_table(all_properties, bounding_boxes):
     areas_df = pd.DataFrame(all_properties)
     bounding_boxes_df = pd.DataFrame(bounding_boxes, columns=["area_id", "bounding_box"])
     areas_df = areas_df.merge(bounding_boxes_df, on="area_id", how="left")
-    
+
+    areas_df = add_area_hierachies(areas_df)
+
     areas_df.to_parquet("./data/db-tables/areas_table.parquet", index=False)
 
 

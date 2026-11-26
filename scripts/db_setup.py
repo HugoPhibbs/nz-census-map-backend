@@ -27,12 +27,12 @@ def fill_areas_table(pool):
         # executemany batches inserts, so its faster
         cur.executemany(
             """
-            INSERT INTO AREAS (area_name, area_id, area_type, bounding_box)
-            VALUES (%s, %s, %s, %s::float8[])
+            INSERT INTO AREAS (area_name, area_id, area_type, bounding_box, sa2_parent_id, sa3_parent_id, ta_parent_id)
+            VALUES (%s, %s, %s, %s::float8[], %s, %s, %s)
             ON CONFLICT DO NOTHING
             """,
             [
-                (area.area_name, area.area_id, area.area_type, [float(x) for x in area.bounding_box])
+                (area.area_name, area.area_id, area.area_type, [float(x) for x in area.bounding_box], area.sa2_parent_id, area.sa3_parent_id, area.ta_parent_id)
                 for area in df.itertuples(index=False)
             ],
         )
@@ -77,10 +77,10 @@ def refresh_materialized_views(pool):
         conn.commit()
     
 def fill_tables(pool):
-    fill_variables_table(pool)
+    # fill_variables_table(pool)
     fill_areas_table(pool)
-    fill_demographic_data_table(pool)
-    refresh_materialized_views(pool)
+    # fill_demographic_data_table(pool)
+    # refresh_materialized_views(pool)
 
 def create_tables_prod():
     pool = get_db_connection_pool()
